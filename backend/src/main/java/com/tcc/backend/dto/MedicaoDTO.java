@@ -5,11 +5,20 @@ import java.time.LocalDateTime;
 
 public class MedicaoDTO {
 
+    private String medicaoId;
     private LocalDateTime dataHora;
     private BigDecimal vazao;
     private BigDecimal volumeLitros;
 
     public MedicaoDTO() {
+    }
+
+    public String getMedicaoId() {
+        return medicaoId;
+    }
+
+    public void setMedicaoId(String medicaoId) {
+        this.medicaoId = medicaoId;
     }
 
     public LocalDateTime getDataHora() {

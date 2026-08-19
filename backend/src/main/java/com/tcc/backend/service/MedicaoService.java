@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class MedicaoService {
@@ -20,14 +21,24 @@ public class MedicaoService {
 
     public Medicao salvar(MedicaoDTO dto) {
 
+        Optional<Medicao> medicaoExistente =
+                medicaoRepository.findByMedicaoId(dto.getMedicaoId());
+
+        if (medicaoExistente.isPresent()) {
+            return medicaoExistente.get();
+        }
+
         Medicao medicao = new Medicao();
 
+        medicao.setMedicaoId(dto.getMedicaoId());
         medicao.setDataHora(dto.getDataHora());
         medicao.setVazao(dto.getVazao());
         medicao.setVolumeLitros(dto.getVolumeLitros());
+
         BigDecimal tarifaPorLitro = new BigDecimal("0.50");
 
-        BigDecimal valorEstimado = dto.getVolumeLitros().multiply(tarifaPorLitro);
+        BigDecimal valorEstimado =
+                dto.getVolumeLitros().multiply(tarifaPorLitro);
 
         medicao.setValorEstimado(valorEstimado);
 
@@ -38,7 +49,10 @@ public class MedicaoService {
         return medicaoRepository.findAll();
     }
 
-    public BigDecimal somarVolumeEntre(LocalDateTime inicio, LocalDateTime fim) {
+    public BigDecimal somarVolumeEntre(
+            LocalDateTime inicio,
+            LocalDateTime fim
+    ) {
         return medicaoRepository.somarVolumeEntre(inicio, fim);
     }
 }

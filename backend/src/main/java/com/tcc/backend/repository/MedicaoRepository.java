@@ -7,9 +7,12 @@ import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface MedicaoRepository extends JpaRepository<Medicao, UUID> {
+
+    Optional<Medicao> findByMedicaoId(String medicaoId);
 
     @Query("""
         SELECT COALESCE(SUM(m.volumeLitros), 0)

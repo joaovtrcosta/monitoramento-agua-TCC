@@ -13,6 +13,9 @@ public class Medicao {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @Column(nullable = false, unique = true, length = 100)
+    private String medicaoId;
+
     @Column(nullable = false)
     private LocalDateTime dataHora;
 
@@ -34,6 +37,14 @@ public class Medicao {
 
     public void setId(UUID id) {
         this.id = id;
+    }
+
+    public String getMedicaoId() {
+        return medicaoId;
+    }
+
+    public void setMedicaoId(String medicaoId) {
+        this.medicaoId = medicaoId;
     }
 
     public LocalDateTime getDataHora() {
