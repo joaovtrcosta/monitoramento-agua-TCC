@@ -11,11 +11,11 @@ export default function Home() {
   return (
     <main
       className="
-        min-h-screen
-        overflow-x-hidden
-        bg-[linear-gradient(135deg,#020617_0%,#071a35_30%,#0b2948_50%,#071a35_70%,#020617_100%)]
-        text-white
-      "
+    min-h-screen
+    overflow-x-hidden
+    bg-[#020b24]
+    text-white
+  "
     >
       <Header />
       <Hero />
