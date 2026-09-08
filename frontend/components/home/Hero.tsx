@@ -18,16 +18,14 @@ export default function Hero() {
         lg:pt-20
       "
     >
-      {/* BRILHOS */}
-
       <div
         className="
           pointer-events-none
           absolute
           left-1/2
-          top-[-250px]
-          h-[600px]
-          w-[900px]
+          -top-62.5
+          h-150
+          w-225
           -translate-x-1/2
           rounded-full
           bg-blue-400/10
@@ -39,10 +37,10 @@ export default function Hero() {
         className="
           pointer-events-none
           absolute
-          right-[-250px]
-          top-[80px]
-          h-[600px]
-          w-[600px]
+          -right-62.5
+          top-20
+          h-150
+          w-150
           rounded-full
           bg-cyan-500/10
           blur-[160px]
@@ -69,15 +67,15 @@ export default function Hero() {
           priority
           className="
             absolute
-            top-[500px]
-            right-[-80px]
-            w-[500px]
+            top-125
+            -right-20
+            w-125
             object-contain
             opacity-[0.12]
 
-            sm:top-[470px]
-            sm:right-[-70px]
-            sm:w-[560px]
+            sm:top-117.5
+            sm:-right-17.5
+            sm:w-140
           "
         />
 
@@ -90,15 +88,15 @@ export default function Hero() {
           className="
             animacao-flutuar
             absolute
-            top-[280px]
-            right-[80px]
-            w-[350px]
+            top-70
+            right-20
+            w-87.5
             object-contain
             opacity-25
 
-            sm:top-[290px]
-            sm:right-[120px]
-            sm:w-[340px]
+            sm:top-72.5
+            sm:right-30
+            sm:w-85
           "
         />
       </div>
@@ -111,7 +109,7 @@ export default function Hero() {
           z-10
           mx-auto
           grid
-          min-h-[720px]
+          min-h-180
           max-w-7xl
           items-start
           pt-18
@@ -199,11 +197,11 @@ export default function Hero() {
           animacao-flutuar
           pointer-events-none
           absolute
-          bottom-[170px]
-          right-[230px]
+          bottom-42.5
+          right-57.5
           z-30
           hidden
-          w-[580px]
+          w-145
           object-contain
           lg:block
         "
@@ -218,11 +216,11 @@ export default function Hero() {
         className="
           pointer-events-none
           absolute
-          bottom-[20px]
-          right-[-80px]
+          bottom-5
+          -right-20
           z-20
           hidden
-          w-[850px]
+          w-212.5
           object-contain
           lg:block
         "
