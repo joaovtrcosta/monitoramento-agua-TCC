@@ -3,7 +3,10 @@ import { Poppins, Geist_Mono, Geist } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
-const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
+const geist = Geist({
+  subsets: ["latin"],
+  variable: "--font-sans",
+});
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -17,8 +20,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AquaMonitor",
-  description: "Monitoramento inteligente do consumo de água",
+  title: "Monitoramento de Água",
+  description: "Monitoramento inteligente do consumo residencial de água",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
