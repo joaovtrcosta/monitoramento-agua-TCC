@@ -6,7 +6,6 @@ import com.tcc.backend.entity.Dispositivo;
 import com.tcc.backend.entity.Medicao;
 import com.tcc.backend.repository.DispositivoRepository;
 import com.tcc.backend.repository.MedicaoRepository;
-
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -68,43 +67,44 @@ public class MedicaoService {
         return medicaoRepository.save(medicao);
     }
 
-    public List<Medicao> listarTodas() {
+    public List<Medicao> listarPorUsuario(String email) {
 
-        return medicaoRepository.findAll();
+        return medicaoRepository
+                .findByDispositivo_Residencia_Usuario_Email(email);
     }
 
     public BigDecimal somarVolumeEntre(
             LocalDateTime inicio,
-            LocalDateTime fim) {
+            LocalDateTime fim,
+            String email) {
 
-        return medicaoRepository.somarVolumeEntre(
+        return medicaoRepository.somarVolumeEntreUsuario(
                 inicio,
-                fim
+                fim,
+                email
         );
     }
 
     public ResumoMensalDTO obterResumoMensal(
             int ano,
-            int mes) {
+            int mes,
+            String email) {
 
-        YearMonth yearMonth = YearMonth.of(
-                ano,
-                mes
-        );
+        YearMonth yearMonth = YearMonth.of(ano, mes);
 
-        LocalDateTime inicio = yearMonth
-                .atDay(1)
-                .atStartOfDay();
+        LocalDateTime inicio =
+                yearMonth.atDay(1).atStartOfDay();
 
-        LocalDateTime fim = yearMonth
-                .plusMonths(1)
-                .atDay(1)
-                .atStartOfDay();
+        LocalDateTime fim =
+                yearMonth.plusMonths(1)
+                        .atDay(1)
+                        .atStartOfDay();
 
         BigDecimal consumoLitros =
-                medicaoRepository.somarVolumeEntre(
+                medicaoRepository.somarVolumeEntreUsuario(
                         inicio,
-                        fim
+                        fim,
+                        email
                 );
 
         if (consumoLitros == null) {
@@ -119,22 +119,15 @@ public class MedicaoService {
                 );
 
         BigDecimal valorAgua =
-                tarifaService.calcularValorAgua(
-                        consumoM3
-                );
+                tarifaService.calcularValorAgua(consumoM3);
 
         BigDecimal valorEsgoto =
-                tarifaService.calcularValorEsgoto(
-                        valorAgua
-                );
+                tarifaService.calcularValorEsgoto(valorAgua);
 
         BigDecimal valorEstimado =
                 valorAgua
                         .add(valorEsgoto)
-                        .setScale(
-                                2,
-                                RoundingMode.HALF_UP
-                        );
+                        .setScale(2, RoundingMode.HALF_UP);
 
         return new ResumoMensalDTO(
                 consumoLitros,

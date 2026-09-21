@@ -1,11 +1,12 @@
 package com.tcc.backend.controller;
 
 import com.tcc.backend.dto.MedicaoDTO;
+import com.tcc.backend.dto.MedicaoResponseDTO;
 import com.tcc.backend.dto.ResumoMensalDTO;
 import com.tcc.backend.entity.Medicao;
 import com.tcc.backend.service.MedicaoService;
-
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -25,35 +26,51 @@ public class MedicaoController {
     }
 
     @PostMapping
-    public ResponseEntity<Medicao> salvar(
+    public ResponseEntity<MedicaoResponseDTO> salvar(
             @RequestBody MedicaoDTO dto) {
 
         Medicao novaMedicao = medicaoService.salvar(dto);
 
-        return ResponseEntity.ok(novaMedicao);
+        return ResponseEntity.ok(
+                converterParaDTO(novaMedicao)
+        );
     }
 
     @GetMapping
-    public ResponseEntity<List<Medicao>> listarTodas() {
+    public ResponseEntity<List<MedicaoResponseDTO>> listarTodas(
+            Authentication authentication) {
 
-        return ResponseEntity.ok(
-                medicaoService.listarTodas());
+        String email = authentication.getName();
+
+        List<MedicaoResponseDTO> medicoes =
+                medicaoService.listarPorUsuario(email)
+                        .stream()
+                        .map(this::converterParaDTO)
+                        .toList();
+
+        return ResponseEntity.ok(medicoes);
     }
 
     @GetMapping("/hoje")
-    public ResponseEntity<BigDecimal> consumoHoje() {
+    public ResponseEntity<BigDecimal> consumoHoje(
+            Authentication authentication) {
+
+        String email = authentication.getName();
 
         LocalDate hoje = LocalDate.now();
 
-        LocalDateTime inicio = hoje.atStartOfDay();
+        LocalDateTime inicio =
+                hoje.atStartOfDay();
 
-        LocalDateTime fim = hoje
-                .plusDays(1)
-                .atStartOfDay();
+        LocalDateTime fim =
+                hoje.plusDays(1).atStartOfDay();
 
-        BigDecimal consumo = medicaoService.somarVolumeEntre(
-                inicio,
-                fim);
+        BigDecimal consumo =
+                medicaoService.somarVolumeEntre(
+                        inicio,
+                        fim,
+                        email
+                );
 
         return ResponseEntity.ok(consumo);
     }
@@ -61,12 +78,29 @@ public class MedicaoController {
     @GetMapping("/resumo-mensal")
     public ResponseEntity<ResumoMensalDTO> resumoMensal(
             @RequestParam int ano,
-            @RequestParam int mes) {
+            @RequestParam int mes,
+            Authentication authentication) {
 
-        ResumoMensalDTO resumo = medicaoService.obterResumoMensal(
-                ano,
-                mes);
+        String email = authentication.getName();
+
+        ResumoMensalDTO resumo =
+                medicaoService.obterResumoMensal(
+                        ano,
+                        mes,
+                        email
+                );
 
         return ResponseEntity.ok(resumo);
+    }
+
+    private MedicaoResponseDTO converterParaDTO(
+            Medicao medicao) {
+
+        return new MedicaoResponseDTO(
+                medicao.getMedicaoId(),
+                medicao.getDataHora(),
+                medicao.getVazao(),
+                medicao.getVolumeLitros()
+        );
     }
 }
