@@ -2,17 +2,17 @@ package com.tcc.backend.service;
 
 import com.tcc.backend.dto.MedicaoDTO;
 import com.tcc.backend.dto.ResumoMensalDTO;
+import com.tcc.backend.entity.Dispositivo;
 import com.tcc.backend.entity.Medicao;
+import com.tcc.backend.repository.DispositivoRepository;
 import com.tcc.backend.repository.MedicaoRepository;
 
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-
 import java.time.LocalDateTime;
 import java.time.YearMonth;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -20,21 +20,41 @@ import java.util.Optional;
 public class MedicaoService {
 
     private final MedicaoRepository medicaoRepository;
+    private final DispositivoRepository dispositivoRepository;
     private final TarifaService tarifaService;
 
     public MedicaoService(
             MedicaoRepository medicaoRepository,
+            DispositivoRepository dispositivoRepository,
             TarifaService tarifaService) {
+
         this.medicaoRepository = medicaoRepository;
+        this.dispositivoRepository = dispositivoRepository;
         this.tarifaService = tarifaService;
     }
 
     public Medicao salvar(MedicaoDTO dto) {
 
-        Optional<Medicao> medicaoExistente = medicaoRepository.findByMedicaoId(dto.getMedicaoId());
+        Optional<Medicao> medicaoExistente =
+                medicaoRepository.findByMedicaoId(dto.getMedicaoId());
 
         if (medicaoExistente.isPresent()) {
             return medicaoExistente.get();
+        }
+
+        Dispositivo dispositivo = dispositivoRepository
+                .findByDeviceId(dto.getDeviceId())
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Dispositivo não encontrado: "
+                                        + dto.getDeviceId()
+                        )
+                );
+
+        if (!dispositivo.isAtivo()) {
+            throw new IllegalArgumentException(
+                    "Dispositivo está inativo."
+            );
         }
 
         Medicao medicao = new Medicao();
@@ -43,20 +63,24 @@ public class MedicaoService {
         medicao.setDataHora(dto.getDataHora());
         medicao.setVazao(dto.getVazao());
         medicao.setVolumeLitros(dto.getVolumeLitros());
+        medicao.setDispositivo(dispositivo);
 
         return medicaoRepository.save(medicao);
     }
 
     public List<Medicao> listarTodas() {
+
         return medicaoRepository.findAll();
     }
 
     public BigDecimal somarVolumeEntre(
             LocalDateTime inicio,
             LocalDateTime fim) {
+
         return medicaoRepository.somarVolumeEntre(
                 inicio,
-                fim);
+                fim
+        );
     }
 
     public ResumoMensalDTO obterResumoMensal(
@@ -65,7 +89,8 @@ public class MedicaoService {
 
         YearMonth yearMonth = YearMonth.of(
                 ano,
-                mes);
+                mes
+        );
 
         LocalDateTime inicio = yearMonth
                 .atDay(1)
@@ -76,36 +101,47 @@ public class MedicaoService {
                 .atDay(1)
                 .atStartOfDay();
 
-        BigDecimal consumoLitros = medicaoRepository.somarVolumeEntre(
-                inicio,
-                fim);
+        BigDecimal consumoLitros =
+                medicaoRepository.somarVolumeEntre(
+                        inicio,
+                        fim
+                );
 
         if (consumoLitros == null) {
             consumoLitros = BigDecimal.ZERO;
         }
 
-        BigDecimal consumoM3 = consumoLitros.divide(
-                new BigDecimal("1000"),
-                6,
-                RoundingMode.HALF_UP);
+        BigDecimal consumoM3 =
+                consumoLitros.divide(
+                        new BigDecimal("1000"),
+                        6,
+                        RoundingMode.HALF_UP
+                );
 
-        BigDecimal valorAgua = tarifaService.calcularValorAgua(
-                consumoM3);
+        BigDecimal valorAgua =
+                tarifaService.calcularValorAgua(
+                        consumoM3
+                );
 
-        BigDecimal valorEsgoto = tarifaService.calcularValorEsgoto(
-                valorAgua);
+        BigDecimal valorEsgoto =
+                tarifaService.calcularValorEsgoto(
+                        valorAgua
+                );
 
-        BigDecimal valorEstimado = valorAgua
-                .add(valorEsgoto)
-                .setScale(
-                        2,
-                        RoundingMode.HALF_UP);
+        BigDecimal valorEstimado =
+                valorAgua
+                        .add(valorEsgoto)
+                        .setScale(
+                                2,
+                                RoundingMode.HALF_UP
+                        );
 
         return new ResumoMensalDTO(
                 consumoLitros,
                 consumoM3,
                 valorAgua,
                 valorEsgoto,
-                valorEstimado);
+                valorEstimado
+        );
     }
 }

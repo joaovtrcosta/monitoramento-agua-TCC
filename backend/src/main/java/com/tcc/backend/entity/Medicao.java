@@ -1,6 +1,7 @@
 package com.tcc.backend.entity;
 
 import jakarta.persistence.*;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -27,6 +28,10 @@ public class Medicao {
 
     @Column(precision = 10, scale = 2)
     private BigDecimal valorEstimado;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "dispositivo_id", nullable = false)
+    private Dispositivo dispositivo;
 
     public Medicao() {
     }
@@ -77,5 +82,13 @@ public class Medicao {
 
     public void setValorEstimado(BigDecimal valorEstimado) {
         this.valorEstimado = valorEstimado;
+    }
+
+    public Dispositivo getDispositivo() {
+        return dispositivo;
+    }
+
+    public void setDispositivo(Dispositivo dispositivo) {
+        this.dispositivo = dispositivo;
     }
 }

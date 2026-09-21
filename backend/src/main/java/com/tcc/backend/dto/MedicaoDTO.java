@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 public class MedicaoDTO {
 
     private String medicaoId;
+    private String deviceId;
     private LocalDateTime dataHora;
     private BigDecimal vazao;
     private BigDecimal volumeLitros;
@@ -19,6 +20,14 @@ public class MedicaoDTO {
 
     public void setMedicaoId(String medicaoId) {
         this.medicaoId = medicaoId;
+    }
+
+    public String getDeviceId() {
+        return deviceId;
+    }
+
+    public void setDeviceId(String deviceId) {
+        this.deviceId = deviceId;
     }
 
     public LocalDateTime getDataHora() {
