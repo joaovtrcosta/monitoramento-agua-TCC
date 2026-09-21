@@ -15,26 +15,35 @@ public interface MedicaoRepository extends JpaRepository<Medicao, UUID> {
 
     Optional<Medicao> findByMedicaoId(String medicaoId);
 
-    List<Medicao> findByDispositivo_Residencia_Usuario_Email(String email);
+    List<Medicao> findByDispositivo_Residencia_Usuario_Email(
+            String email
+    );
 
     @Query("""
-        SELECT COALESCE(SUM(m.volumeLitros), 0)
-        FROM Medicao m
-        WHERE m.dataHora >= :inicio
-        AND m.dataHora < :fim
-    """)
+            SELECT COALESCE(SUM(m.volumeLitros), 0)
+            FROM Medicao m
+            WHERE m.dataHora >= :inicio
+            AND m.dataHora < :fim
+            """)
     BigDecimal somarVolumeEntre(
             @Param("inicio") LocalDateTime inicio,
             @Param("fim") LocalDateTime fim
     );
 
+    List<Medicao>
+    findByDispositivo_Residencia_Usuario_EmailAndDataHoraGreaterThanEqualAndDataHoraLessThan(
+            String email,
+            LocalDateTime inicio,
+            LocalDateTime fim
+    );
+
     @Query("""
-        SELECT COALESCE(SUM(m.volumeLitros), 0)
-        FROM Medicao m
-        WHERE m.dataHora >= :inicio
-        AND m.dataHora < :fim
-        AND m.dispositivo.residencia.usuario.email = :email
-    """)
+            SELECT COALESCE(SUM(m.volumeLitros), 0)
+            FROM Medicao m
+            WHERE m.dataHora >= :inicio
+            AND m.dataHora < :fim
+            AND m.dispositivo.residencia.usuario.email = :email
+            """)
     BigDecimal somarVolumeEntreUsuario(
             @Param("inicio") LocalDateTime inicio,
             @Param("fim") LocalDateTime fim,

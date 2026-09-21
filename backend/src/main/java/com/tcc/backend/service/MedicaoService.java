@@ -1,19 +1,25 @@
 package com.tcc.backend.service;
 
+import com.tcc.backend.dto.ConsumoDiarioDTO;
 import com.tcc.backend.dto.MedicaoDTO;
 import com.tcc.backend.dto.ResumoMensalDTO;
 import com.tcc.backend.entity.Dispositivo;
 import com.tcc.backend.entity.Medicao;
 import com.tcc.backend.repository.DispositivoRepository;
 import com.tcc.backend.repository.MedicaoRepository;
+
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class MedicaoService {
@@ -35,7 +41,9 @@ public class MedicaoService {
     public Medicao salvar(MedicaoDTO dto) {
 
         Optional<Medicao> medicaoExistente =
-                medicaoRepository.findByMedicaoId(dto.getMedicaoId());
+                medicaoRepository.findByMedicaoId(
+                        dto.getMedicaoId()
+                );
 
         if (medicaoExistente.isPresent()) {
             return medicaoExistente.get();
@@ -90,7 +98,8 @@ public class MedicaoService {
             int mes,
             String email) {
 
-        YearMonth yearMonth = YearMonth.of(ano, mes);
+        YearMonth yearMonth =
+                YearMonth.of(ano, mes);
 
         LocalDateTime inicio =
                 yearMonth.atDay(1).atStartOfDay();
@@ -119,15 +128,22 @@ public class MedicaoService {
                 );
 
         BigDecimal valorAgua =
-                tarifaService.calcularValorAgua(consumoM3);
+                tarifaService.calcularValorAgua(
+                        consumoM3
+                );
 
         BigDecimal valorEsgoto =
-                tarifaService.calcularValorEsgoto(valorAgua);
+                tarifaService.calcularValorEsgoto(
+                        valorAgua
+                );
 
         BigDecimal valorEstimado =
                 valorAgua
                         .add(valorEsgoto)
-                        .setScale(2, RoundingMode.HALF_UP);
+                        .setScale(
+                                2,
+                                RoundingMode.HALF_UP
+                        );
 
         return new ResumoMensalDTO(
                 consumoLitros,
@@ -136,5 +152,68 @@ public class MedicaoService {
                 valorEsgoto,
                 valorEstimado
         );
+    }
+
+    public List<ConsumoDiarioDTO> obterConsumoDiario(
+            int ano,
+            int mes,
+            String email) {
+
+        YearMonth yearMonth =
+                YearMonth.of(ano, mes);
+
+        LocalDateTime inicio =
+                yearMonth.atDay(1).atStartOfDay();
+
+        LocalDateTime fim =
+                yearMonth.plusMonths(1)
+                        .atDay(1)
+                        .atStartOfDay();
+
+        List<Medicao> medicoes =
+                medicaoRepository
+                        .findByDispositivo_Residencia_Usuario_EmailAndDataHoraGreaterThanEqualAndDataHoraLessThan(
+                                email,
+                                inicio,
+                                fim
+                        );
+
+        Map<LocalDate, BigDecimal> consumoPorDia =
+                medicoes.stream()
+                        .collect(
+                                Collectors.groupingBy(
+                                        medicao ->
+                                                medicao
+                                                        .getDataHora()
+                                                        .toLocalDate(),
+
+                                        Collectors.mapping(
+                                                medicao ->
+                                                        medicao.getVolumeLitros(),
+
+                                                Collectors.reducing(
+                                                        BigDecimal.ZERO,
+
+                                                        (valor1, valor2) ->
+                                                                valor1.add(valor2)
+                                                )
+                                        )
+                                )
+                        );
+
+        return consumoPorDia.entrySet()
+                .stream()
+                .map(entry ->
+                        new ConsumoDiarioDTO(
+                                entry.getKey(),
+                                entry.getValue()
+                        )
+                )
+                .sorted(
+                        Comparator.comparing(
+                                dto -> dto.getData()
+                        )
+                )
+                .toList();
     }
 }

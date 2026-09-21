@@ -1,10 +1,12 @@
 package com.tcc.backend.controller;
 
+import com.tcc.backend.dto.ConsumoDiarioDTO;
 import com.tcc.backend.dto.MedicaoDTO;
 import com.tcc.backend.dto.MedicaoResponseDTO;
 import com.tcc.backend.dto.ResumoMensalDTO;
 import com.tcc.backend.entity.Medicao;
 import com.tcc.backend.service.MedicaoService;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -29,7 +31,8 @@ public class MedicaoController {
     public ResponseEntity<MedicaoResponseDTO> salvar(
             @RequestBody MedicaoDTO dto) {
 
-        Medicao novaMedicao = medicaoService.salvar(dto);
+        Medicao novaMedicao =
+                medicaoService.salvar(dto);
 
         return ResponseEntity.ok(
                 converterParaDTO(novaMedicao)
@@ -43,7 +46,8 @@ public class MedicaoController {
         String email = authentication.getName();
 
         List<MedicaoResponseDTO> medicoes =
-                medicaoService.listarPorUsuario(email)
+                medicaoService
+                        .listarPorUsuario(email)
                         .stream()
                         .map(this::converterParaDTO)
                         .toList();
@@ -63,7 +67,8 @@ public class MedicaoController {
                 hoje.atStartOfDay();
 
         LocalDateTime fim =
-                hoje.plusDays(1).atStartOfDay();
+                hoje.plusDays(1)
+                        .atStartOfDay();
 
         BigDecimal consumo =
                 medicaoService.somarVolumeEntre(
@@ -91,6 +96,24 @@ public class MedicaoController {
                 );
 
         return ResponseEntity.ok(resumo);
+    }
+
+    @GetMapping("/consumo-diario")
+    public ResponseEntity<List<ConsumoDiarioDTO>> consumoDiario(
+            @RequestParam int ano,
+            @RequestParam int mes,
+            Authentication authentication) {
+
+        String email = authentication.getName();
+
+        List<ConsumoDiarioDTO> consumo =
+                medicaoService.obterConsumoDiario(
+                        ano,
+                        mes,
+                        email
+                );
+
+        return ResponseEntity.ok(consumo);
     }
 
     private MedicaoResponseDTO converterParaDTO(

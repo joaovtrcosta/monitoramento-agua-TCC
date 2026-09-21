@@ -44,34 +44,44 @@ export default function LoginForm() {
     setError(null);
 
     try {
-      console.log("Dados do login:", values);
+      const response = await fetch("http://localhost:8080/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: values.email,
+          senha: values.password,
+        }),
+      });
 
-      /*
-        FUTURAMENTE:
+      if (!response.ok) {
+        setError("E-mail ou senha inválidos.");
+        return;
+      }
 
-        const res = await authApi.login(values);
+      const data = await response.json();
 
-        localStorage.setItem("token", res.token);
-
-        router.push("/dashboard");
-      */
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("nome", data.nome);
+      localStorage.setItem("email", data.email);
+      localStorage.setItem("role", data.role);
 
       router.push("/dashboard");
-    } catch {
-      setError("E-mail ou senha inválidos.");
+    } catch (error) {
+      console.error("Erro ao realizar login:", error);
+
+      setError("Não foi possível conectar ao servidor.");
     }
   }
 
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="space-y-6"
-    >
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
 
-      <div className="space-y-2">
+      <div>
         <label
           htmlFor="email"
-          className="text-sm font-medium text-slate-300"
+          className="mb-2 block text-sm font-medium text-white"
         >
           E-mail
         </label>
@@ -79,40 +89,20 @@ export default function LoginForm() {
         <input
           id="email"
           type="email"
-          placeholder="seuemail@email.com"
+          placeholder="seu@email.com"
           {...register("email")}
-          className="
-            w-full
-            rounded-xl
-            border
-            border-blue-400/20
-            bg-blue-950/20
-            px-4
-            py-3
-            text-white
-            outline-none
-            transition-all
-            duration-300
-
-            placeholder:text-slate-500
-
-            focus:border-blue-400/60
-            focus:ring-2
-            focus:ring-blue-500/20
-          "
+          className="w-full rounded-lg border border-blue-900 bg-[#071431] px-4 py-3 text-white outline-none transition placeholder:text-gray-500 focus:border-blue-500"
         />
 
         {errors.email && (
-          <p className="text-sm text-red-400">
-            {errors.email.message}
-          </p>
+          <p className="mt-1 text-sm text-red-400">{errors.email.message}</p>
         )}
       </div>
 
-      <div className="space-y-2">
+      <div>
         <label
           htmlFor="password"
-          className="text-sm font-medium text-slate-300"
+          className="mb-2 block text-sm font-medium text-white"
         >
           Senha
         </label>
@@ -123,75 +113,25 @@ export default function LoginForm() {
             type={showPassword ? "text" : "password"}
             placeholder="Digite sua senha"
             {...register("password")}
-            className="
-              w-full
-              rounded-xl
-              border
-              border-blue-400/20
-              bg-blue-950/20
-              px-4
-              py-3
-              pr-12
-              text-white
-              outline-none
-              transition-all
-              duration-300
-
-              placeholder:text-slate-500
-
-              focus:border-blue-400/60
-              focus:ring-2
-              focus:ring-blue-500/20
-            "
+            className="w-full rounded-lg border border-blue-900 bg-[#071431] px-4 py-3 pr-12 text-white outline-none transition placeholder:text-gray-500 focus:border-blue-500"
           />
 
           <button
             type="button"
-            tabIndex={-1}
-            onClick={() => setShowPassword((prev) => !prev)}
-            className="
-              absolute
-              right-4
-              top-1/2
-              -translate-y-1/2
-              cursor-pointer
-              text-slate-400
-              transition-colors
-              duration-300
-              hover:text-blue-400
-            "
-            aria-label={
-              showPassword ? "Ocultar senha" : "Mostrar senha"
-            }
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition hover:text-white"
           >
-            {showPassword ? (
-              <EyeOff className="h-5 w-5" />
-            ) : (
-              <Eye className="h-5 w-5" />
-            )}
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
         </div>
 
         {errors.password && (
-          <p className="text-sm text-red-400">
-            {errors.password.message}
-          </p>
+          <p className="mt-1 text-sm text-red-400">{errors.password.message}</p>
         )}
       </div>
 
       {error && (
-        <div
-          className="
-            rounded-xl
-            border
-            border-red-500/30
-            bg-red-500/10
-            px-4
-            py-3
-            text-sm
-            text-red-400
-          "
-        >
+        <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {error}
         </div>
       )}
@@ -199,46 +139,9 @@ export default function LoginForm() {
       <button
         type="submit"
         disabled={isSubmitting}
-        className="
-          h-12
-          w-full
-          cursor-pointer
-          rounded-xl
-          border
-          border-blue-600
-          bg-blue-600
-          font-medium
-          text-white
-          shadow-[0_0_25px_rgba(37,99,235,0.25)]
-          transition-all
-          duration-500
-          ease-in-out
-
-          hover:border-blue-400
-          hover:bg-transparent
-          hover:text-blue-400
-
-          disabled:cursor-not-allowed
-          disabled:opacity-50
-        "
+        className="w-full rounded-lg bg-blue-600 py-3 font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {isSubmitting ? "Entrando..." : "Entrar"}
-      </button>
-
-      <button
-        type="button"
-        onClick={() => router.push("/")}
-        className="
-          w-full
-          cursor-pointer
-          text-sm
-          text-slate-400
-          transition-colors
-          duration-300
-          hover:text-blue-400
-        "
-      >
-        ← Voltar ao início
       </button>
     </form>
   );
