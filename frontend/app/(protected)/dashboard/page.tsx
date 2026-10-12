@@ -199,8 +199,8 @@ export default function DashboardPage() {
 
   function formatarNumero(valor: number) {
     return valor.toLocaleString("pt-BR", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      minimumFractionDigits: 3,
+      maximumFractionDigits: 3,
     });
   }
 
@@ -244,9 +244,7 @@ export default function DashboardPage() {
       .slice(0, 5);
   }, [medicoes]);
 
-  /*
-   * Ordena o consumo diário pela data.
-   */
+  
   const consumoDiarioOrdenado = useMemo(() => {
     return [...consumoDiario].sort(
       (a, b) =>
@@ -255,12 +253,6 @@ export default function DashboardPage() {
     );
   }, [consumoDiario]);
 
-  /*
-   * Maior consumo do período.
-   *
-   * É utilizado para definir a altura proporcional
-   * das barras do gráfico.
-   */
   const maiorConsumoDiario = useMemo(() => {
     if (consumoDiarioOrdenado.length === 0) {
       return 0;
@@ -273,9 +265,6 @@ export default function DashboardPage() {
     );
   }, [consumoDiarioOrdenado]);
 
-  /*
-   * Indicador simples de anomalia.
-   */
   const vazaoMedia = useMemo(() => {
     if (medicoes.length === 0) {
       return 0;
@@ -428,7 +417,6 @@ export default function DashboardPage() {
 
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
 
-          {/* CONSUMO HOJE */}
           <div className="rounded-2xl border border-blue-400/10 bg-blue-950/20 p-5 transition-all duration-300 hover:border-blue-400/25">
 
             <div className="flex items-center justify-between">
@@ -458,7 +446,6 @@ export default function DashboardPage() {
           </div>
 
 
-          {/* CONSUMO MÊS */}
           <div className="rounded-2xl border border-blue-400/10 bg-blue-950/20 p-5 transition-all duration-300 hover:border-blue-400/25">
 
             <div className="flex items-center justify-between">
@@ -487,8 +474,6 @@ export default function DashboardPage() {
 
           </div>
 
-
-          {/* M³ */}
           <div className="rounded-2xl border border-blue-400/10 bg-blue-950/20 p-5 transition-all duration-300 hover:border-blue-400/25">
 
             <div className="flex items-center justify-between">
@@ -517,8 +502,6 @@ export default function DashboardPage() {
 
           </div>
 
-
-          {/* VALOR */}
           <div className="rounded-2xl border border-blue-400/10 bg-blue-950/20 p-5 transition-all duration-300 hover:border-blue-400/25">
 
             <div className="flex items-center justify-between">
@@ -703,8 +686,6 @@ export default function DashboardPage() {
 
         </div>
 
-
-        {/* GRÁFICO DE CONSUMO DIÁRIO */}
         <div className="mt-6 rounded-2xl border border-blue-400/10 bg-blue-950/20 p-6">
 
           <div className="mb-6 flex items-center justify-between">

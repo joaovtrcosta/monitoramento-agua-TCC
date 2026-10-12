@@ -1,3 +1,4 @@
+
 package com.tcc.backend.config;
 
 import com.tcc.backend.security.JwtAuthenticationFilter;
@@ -23,7 +24,6 @@ public class SecurityConfig {
 
     public SecurityConfig(
             JwtAuthenticationFilter jwtAuthenticationFilter) {
-
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
@@ -33,15 +33,10 @@ public class SecurityConfig {
 
         http
             .csrf(csrf -> csrf.disable())
-
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
             .sessionManagement(session ->
-                session.sessionCreationPolicy(
-                    SessionCreationPolicy.STATELESS
-                )
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
-
             .authorizeHttpRequests(auth -> auth
 
                 // Permite requisições OPTIONS do navegador
@@ -50,34 +45,21 @@ public class SecurityConfig {
                 // Login público
                 .requestMatchers("/api/auth/**").permitAll()
 
-                // Cadastro temporário
-                .requestMatchers(
-                    HttpMethod.POST,
-                    "/api/usuarios"
-                ).permitAll()
+                // Somente técnico pode cadastrar e gerenciar usuários
+                .requestMatchers("/api/usuarios/**").hasRole("TECNICO")
 
-                // Criação de residência - temporário
-                .requestMatchers(
-                    HttpMethod.POST,
-                    "/api/residencias/**"
-                ).permitAll()
+                // Somente técnico pode criar e gerenciar residências
+                .requestMatchers("/api/residencias/**").hasRole("TECNICO")
 
-                // Criação de dispositivo - temporário
-                .requestMatchers(
-                    HttpMethod.POST,
-                    "/api/dispositivos/**"
-                ).permitAll()
+                // Somente técnico pode cadastrar e gerenciar dispositivos
+                .requestMatchers("/api/dispositivos/**").hasRole("TECNICO")
 
-                // Recebimento de medições - temporário
-                .requestMatchers(
-                    HttpMethod.POST,
-                    "/api/medicoes"
-                ).permitAll()
+                // Recebimento de medições do ESP32 (temporário)
+                .requestMatchers(HttpMethod.POST, "/api/medicoes").permitAll()
 
-                // Todo o restante exige JWT
+                // Demais endpoints exigem autenticação
                 .anyRequest().authenticated()
             )
-
             .addFilterBefore(
                 jwtAuthenticationFilter,
                 UsernamePasswordAuthenticationFilter.class
@@ -88,40 +70,26 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-
-        CorsConfiguration configuration =
-                new CorsConfiguration();
+        CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOrigins(
-                List.of("http://localhost:3000")
+            List.of("http://localhost:3000")
         );
 
         configuration.setAllowedMethods(
-                List.of(
-                    "GET",
-                    "POST",
-                    "PUT",
-                    "DELETE",
-                    "OPTIONS"
-                )
+            List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")
         );
 
         configuration.setAllowedHeaders(
-                List.of(
-                    "Authorization",
-                    "Content-Type"
-                )
+            List.of("Authorization", "Content-Type")
         );
 
         configuration.setAllowCredentials(false);
 
         UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
+            new UrlBasedCorsConfigurationSource();
 
-        source.registerCorsConfiguration(
-                "/**",
-                configuration
-        );
+        source.registerCorsConfiguration("/**", configuration);
 
         return source;
     }

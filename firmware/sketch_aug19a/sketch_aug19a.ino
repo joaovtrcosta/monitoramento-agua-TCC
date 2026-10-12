@@ -38,9 +38,9 @@ unsigned long ultimaMedicao = 0;
 // ======================================================
 
 const char *servidor =
-    "http://192.168.89.40:8080/api/medicoes";
+    "http://192.168.1.9:8080/api/medicoes";
 
-
+const char *DEVICE_ID = "ESP32-001";
 // ======================================================
 // HORARIO / NTP
 // ======================================================
@@ -315,6 +315,11 @@ bool enviarMedicao(
 
   json += "\"medicaoId\":\"";
   json += medicaoId;
+  json += "\",";
+
+  // ID DO DISPOSITIVO
+  json += "\"deviceId\":\"";
+  json += DEVICE_ID;
   json += "\",";
 
   json += "\"dataHora\":\"";
@@ -752,7 +757,7 @@ void setup() {
 
   SPI.begin(
       18,
-      19,
+      26,
       23,
       SD_CS
   );

@@ -67,7 +67,11 @@ export default function LoginForm() {
       localStorage.setItem("email", data.email);
       localStorage.setItem("role", data.role);
 
-      router.push("/dashboard");
+      if (data.role === "TECNICO") {
+        router.push("/tecnico");
+      } else {
+        router.push("/dashboard");
+      }
     } catch (error) {
       console.error("Erro ao realizar login:", error);
 
@@ -77,7 +81,6 @@ export default function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-
       <div>
         <label
           htmlFor="email"

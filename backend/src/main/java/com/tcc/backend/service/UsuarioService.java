@@ -25,17 +25,30 @@ public class UsuarioService {
 
     public Usuario salvar(Usuario usuario) {
 
+        if (usuario.getNome() == null || usuario.getNome().isBlank()) {
+            throw new IllegalArgumentException(
+                    "O nome é obrigatório.");
+        }
+
+        if (usuario.getEmail() == null || usuario.getEmail().isBlank()) {
+            throw new IllegalArgumentException(
+                    "O e-mail é obrigatório.");
+        }
+
+        if (usuario.getSenha() == null || usuario.getSenha().length() < 6) {
+            throw new IllegalArgumentException(
+                    "A senha deve possuir pelo menos 6 caracteres.");
+        }
+
         if (usuarioRepository.existsByEmail(usuario.getEmail())) {
             throw new IllegalArgumentException(
                     "Já existe um usuário cadastrado com este e-mail.");
         }
 
-        if (usuario.getRole() == null) {
-            usuario.setRole(Role.USUARIO);
-        }
+        usuario.setRole(Role.USUARIO);
 
-        usuario.setSenha(
-                passwordEncoder.encode(usuario.getSenha()));
+        
+        usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
 
         return usuarioRepository.save(usuario);
     }

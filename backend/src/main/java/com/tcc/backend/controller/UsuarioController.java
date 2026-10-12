@@ -1,5 +1,7 @@
+
 package com.tcc.backend.controller;
 
+import com.tcc.backend.dto.UsuarioResponseDTO;
 import com.tcc.backend.entity.Usuario;
 import com.tcc.backend.service.UsuarioService;
 
@@ -21,25 +23,36 @@ public class UsuarioController {
     }
 
     @PostMapping
-    public ResponseEntity<Usuario> criar(
+    public ResponseEntity<UsuarioResponseDTO> criar(
             @RequestBody Usuario usuario) {
 
+        Usuario usuarioSalvo = usuarioService.salvar(usuario);
+
         return ResponseEntity.ok(
-                usuarioService.salvar(usuario));
+                UsuarioResponseDTO.fromEntity(usuarioSalvo)
+        );
     }
 
     @GetMapping
-    public ResponseEntity<List<Usuario>> listarTodos() {
+    public ResponseEntity<List<UsuarioResponseDTO>> listarTodos() {
 
-        return ResponseEntity.ok(
-                usuarioService.listarTodos());
+        List<UsuarioResponseDTO> usuarios =
+                usuarioService.listarTodos()
+                        .stream()
+                        .map(UsuarioResponseDTO::fromEntity)
+                        .toList();
+
+        return ResponseEntity.ok(usuarios);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Usuario> buscarPorId(
+    public ResponseEntity<UsuarioResponseDTO> buscarPorId(
             @PathVariable UUID id) {
 
+        Usuario usuario = usuarioService.buscarPorId(id);
+
         return ResponseEntity.ok(
-                usuarioService.buscarPorId(id));
+                UsuarioResponseDTO.fromEntity(usuario)
+        );
     }
 }
