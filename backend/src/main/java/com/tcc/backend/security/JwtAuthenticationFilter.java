@@ -43,30 +43,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token =
                 authorizationHeader.substring(7);
 
-        if (jwtService.tokenValido(token)) {
+  
+if (jwtService.tokenValido(token)) {
 
-            String email =
-                    jwtService.extrairEmail(token);
+    String email = jwtService.extrairEmail(token);
 
-            String role =
-                    jwtService.extrairRole(token);
+    String role = jwtService.extrairRole(token);
 
-            var authorities = List.of(
-                    new SimpleGrantedAuthority("ROLE_" + role)
-            );
+       var authorities = List.of(
+        new SimpleGrantedAuthority("ROLE_" + role)
+    );
 
-            var authentication =
-                    new UsernamePasswordAuthenticationToken(
-                            email,
-                            null,
-                            authorities
-                    );
+    var authentication = new UsernamePasswordAuthenticationToken(
+        email,
+        null,
+        authorities
+    );
 
-            SecurityContextHolder
-                    .getContext()
-                    .setAuthentication(authentication);
-        }
+    SecurityContextHolder
+        .getContext()
+        .setAuthentication(authentication);
+}
 
-        filterChain.doFilter(request, response);
+filterChain.doFilter(request, response);
+
     }
 }

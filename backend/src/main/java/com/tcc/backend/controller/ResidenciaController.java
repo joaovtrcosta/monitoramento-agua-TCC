@@ -1,3 +1,4 @@
+
 package com.tcc.backend.controller;
 
 import com.tcc.backend.entity.Residencia;
@@ -28,9 +29,7 @@ public class ResidenciaController {
             @RequestBody Residencia residencia) {
 
         return ResponseEntity.ok(
-                residenciaService.salvar(
-                        residencia,
-                        usuarioId));
+                residenciaService.salvar(residencia, usuarioId));
     }
 
     @GetMapping("/usuario/{usuarioId}")
@@ -38,7 +37,23 @@ public class ResidenciaController {
             @PathVariable UUID usuarioId) {
 
         return ResponseEntity.ok(
-                residenciaService.listarPorUsuario(
-                        usuarioId));
+                residenciaService.listarPorUsuario(usuarioId));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Residencia> atualizar(
+            @PathVariable UUID id,
+            @RequestBody Residencia dados) {
+
+        return ResponseEntity.ok(
+                residenciaService.atualizar(id, dados));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> excluir(@PathVariable UUID id) {
+
+        residenciaService.excluir(id);
+
+        return ResponseEntity.noContent().build();
     }
 }

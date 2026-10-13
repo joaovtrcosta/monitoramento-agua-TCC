@@ -24,196 +24,177 @@ import java.util.stream.Collectors;
 @Service
 public class MedicaoService {
 
-    private final MedicaoRepository medicaoRepository;
-    private final DispositivoRepository dispositivoRepository;
-    private final TarifaService tarifaService;
+        private final MedicaoRepository medicaoRepository;
+        private final DispositivoRepository dispositivoRepository;
+        private final TarifaService tarifaService;
 
-    public MedicaoService(
-            MedicaoRepository medicaoRepository,
-            DispositivoRepository dispositivoRepository,
-            TarifaService tarifaService) {
+        public MedicaoService(
+                        MedicaoRepository medicaoRepository,
+                        DispositivoRepository dispositivoRepository,
+                        TarifaService tarifaService) {
 
-        this.medicaoRepository = medicaoRepository;
-        this.dispositivoRepository = dispositivoRepository;
-        this.tarifaService = tarifaService;
-    }
-
-    public Medicao salvar(MedicaoDTO dto) {
-
-        Optional<Medicao> medicaoExistente =
-                medicaoRepository.findByMedicaoId(
-                        dto.getMedicaoId()
-                );
-
-        if (medicaoExistente.isPresent()) {
-            return medicaoExistente.get();
+                this.medicaoRepository = medicaoRepository;
+                this.dispositivoRepository = dispositivoRepository;
+                this.tarifaService = tarifaService;
         }
 
-        Dispositivo dispositivo = dispositivoRepository
-                .findByDeviceId(dto.getDeviceId())
-                .orElseThrow(() ->
-                        new IllegalArgumentException(
-                                "Dispositivo não encontrado: "
-                                        + dto.getDeviceId()
-                        )
-                );
+        public Medicao salvar(MedicaoDTO dto) {
 
-        if (!dispositivo.isAtivo()) {
-            throw new IllegalArgumentException(
-                    "Dispositivo está inativo."
-            );
+                if (dto == null
+                                || dto.getDeviceId() == null
+                                || dto.getDeviceId().isBlank()
+                                || dto.getDeviceKey() == null
+                                || dto.getDeviceKey().isBlank()) {
+
+                        throw new IllegalArgumentException(
+                                        "O identificador e a chave do dispositivo são obrigatórios.");
+                }
+
+                // Localiza o dispositivo usando o identificador e a chave.
+                Dispositivo dispositivo = dispositivoRepository
+                                .findByDeviceIdAndDeviceKey(
+                                                dto.getDeviceId().trim(),
+                                                dto.getDeviceKey().trim())
+                                .orElseThrow(() -> new IllegalArgumentException(
+                                                "Identificador ou chave do dispositivo inválidos."));
+
+                // Impede o envio de medições por dispositivos inativos.
+                if (!dispositivo.isAtivo()) {
+                        throw new IllegalArgumentException(
+                                        "Dispositivo está inativo. O envio de medições foi bloqueado.");
+                }
+
+                // Verifica se a medição já foi recebida anteriormente.
+                if (dto.getMedicaoId() == null || dto.getMedicaoId().isBlank()) {
+                        throw new IllegalArgumentException(
+                                        "O identificador da medição é obrigatório.");
+                }
+
+                Optional<Medicao> medicaoExistente = medicaoRepository.findByMedicaoId(dto.getMedicaoId());
+
+                if (medicaoExistente.isPresent()) {
+                        return medicaoExistente.get();
+                }
+
+                // Cria e salva a nova medição.
+                Medicao medicao = new Medicao();
+
+                medicao.setMedicaoId(dto.getMedicaoId());
+                medicao.setDataHora(dto.getDataHora());
+                medicao.setVazao(dto.getVazao());
+                medicao.setVolumeLitros(dto.getVolumeLitros());
+                medicao.setDispositivo(dispositivo);
+
+                return medicaoRepository.save(medicao);
         }
 
-        Medicao medicao = new Medicao();
+        public List<Medicao> listarPorUsuario(String email) {
 
-        medicao.setMedicaoId(dto.getMedicaoId());
-        medicao.setDataHora(dto.getDataHora());
-        medicao.setVazao(dto.getVazao());
-        medicao.setVolumeLitros(dto.getVolumeLitros());
-        medicao.setDispositivo(dispositivo);
-
-        return medicaoRepository.save(medicao);
-    }
-
-    public List<Medicao> listarPorUsuario(String email) {
-
-        return medicaoRepository
-                .findByDispositivo_Residencia_Usuario_Email(email);
-    }
-
-    public BigDecimal somarVolumeEntre(
-            LocalDateTime inicio,
-            LocalDateTime fim,
-            String email) {
-
-        return medicaoRepository.somarVolumeEntreUsuario(
-                inicio,
-                fim,
-                email
-        );
-    }
-
-    public ResumoMensalDTO obterResumoMensal(
-            int ano,
-            int mes,
-            String email) {
-
-        YearMonth yearMonth =
-                YearMonth.of(ano, mes);
-
-        LocalDateTime inicio =
-                yearMonth.atDay(1).atStartOfDay();
-
-        LocalDateTime fim =
-                yearMonth.plusMonths(1)
-                        .atDay(1)
-                        .atStartOfDay();
-
-        BigDecimal consumoLitros =
-                medicaoRepository.somarVolumeEntreUsuario(
-                        inicio,
-                        fim,
-                        email
-                );
-
-        if (consumoLitros == null) {
-            consumoLitros = BigDecimal.ZERO;
+                return medicaoRepository
+                                .findByDispositivo_Residencia_Usuario_Email(email);
         }
 
-        BigDecimal consumoM3 =
-                consumoLitros.divide(
-                        new BigDecimal("1000"),
-                        6,
-                        RoundingMode.HALF_UP
-                );
+        public BigDecimal somarVolumeEntre(
+                        LocalDateTime inicio,
+                        LocalDateTime fim,
+                        String email) {
 
-        BigDecimal valorAgua =
-                tarifaService.calcularValorAgua(
-                        consumoM3
-                );
-
-        BigDecimal valorEsgoto =
-                tarifaService.calcularValorEsgoto(
-                        valorAgua
-                );
-
-        BigDecimal valorEstimado =
-                valorAgua
-                        .add(valorEsgoto)
-                        .setScale(
-                                2,
-                                RoundingMode.HALF_UP
-                        );
-
-        return new ResumoMensalDTO(
-                consumoLitros,
-                consumoM3,
-                valorAgua,
-                valorEsgoto,
-                valorEstimado
-        );
-    }
-
-    public List<ConsumoDiarioDTO> obterConsumoDiario(
-            int ano,
-            int mes,
-            String email) {
-
-        YearMonth yearMonth =
-                YearMonth.of(ano, mes);
-
-        LocalDateTime inicio =
-                yearMonth.atDay(1).atStartOfDay();
-
-        LocalDateTime fim =
-                yearMonth.plusMonths(1)
-                        .atDay(1)
-                        .atStartOfDay();
-
-        List<Medicao> medicoes =
-                medicaoRepository
-                        .findByDispositivo_Residencia_Usuario_EmailAndDataHoraGreaterThanEqualAndDataHoraLessThan(
-                                email,
+                return medicaoRepository.somarVolumeEntreUsuario(
                                 inicio,
-                                fim
-                        );
+                                fim,
+                                email);
+        }
 
-        Map<LocalDate, BigDecimal> consumoPorDia =
-                medicoes.stream()
-                        .collect(
-                                Collectors.groupingBy(
-                                        medicao ->
-                                                medicao
-                                                        .getDataHora()
-                                                        .toLocalDate(),
+        public ResumoMensalDTO obterResumoMensal(
+                        int ano,
+                        int mes,
+                        String email) {
 
-                                        Collectors.mapping(
-                                                medicao ->
-                                                        medicao.getVolumeLitros(),
+                YearMonth yearMonth = YearMonth.of(ano, mes);
 
-                                                Collectors.reducing(
-                                                        BigDecimal.ZERO,
+                LocalDateTime inicio = yearMonth.atDay(1).atStartOfDay();
 
-                                                        (valor1, valor2) ->
-                                                                valor1.add(valor2)
-                                                )
-                                        )
-                                )
-                        );
+                LocalDateTime fim = yearMonth.plusMonths(1)
+                                .atDay(1)
+                                .atStartOfDay();
 
-        return consumoPorDia.entrySet()
-                .stream()
-                .map(entry ->
-                        new ConsumoDiarioDTO(
-                                entry.getKey(),
-                                entry.getValue()
-                        )
-                )
-                .sorted(
-                        Comparator.comparing(
-                                dto -> dto.getData()
-                        )
-                )
-                .toList();
-    }
+                BigDecimal consumoLitros = medicaoRepository.somarVolumeEntreUsuario(
+                                inicio,
+                                fim,
+                                email);
+
+                if (consumoLitros == null) {
+                        consumoLitros = BigDecimal.ZERO;
+                }
+
+                BigDecimal consumoM3 = consumoLitros.divide(
+                                new BigDecimal("1000"),
+                                6,
+                                RoundingMode.HALF_UP);
+
+                BigDecimal valorAgua = tarifaService.calcularValorAgua(
+                                consumoM3);
+
+                BigDecimal valorEsgoto = tarifaService.calcularValorEsgoto(
+                                valorAgua);
+
+                BigDecimal valorEstimado = valorAgua
+                                .add(valorEsgoto)
+                                .setScale(
+                                                2,
+                                                RoundingMode.HALF_UP);
+
+                return new ResumoMensalDTO(
+                                consumoLitros,
+                                consumoM3,
+                                valorAgua,
+                                valorEsgoto,
+                                valorEstimado);
+        }
+
+        public List<ConsumoDiarioDTO> obterConsumoDiario(
+                        int ano,
+                        int mes,
+                        String email) {
+
+                YearMonth yearMonth = YearMonth.of(ano, mes);
+
+                LocalDateTime inicio = yearMonth.atDay(1).atStartOfDay();
+
+                LocalDateTime fim = yearMonth.plusMonths(1)
+                                .atDay(1)
+                                .atStartOfDay();
+
+                List<Medicao> medicoes = medicaoRepository
+                                .findByDispositivo_Residencia_Usuario_EmailAndDataHoraGreaterThanEqualAndDataHoraLessThan(
+                                                email,
+                                                inicio,
+                                                fim);
+
+                Map<LocalDate, BigDecimal> consumoPorDia = medicoes.stream()
+                                .collect(
+                                                Collectors.groupingBy(
+                                                                medicao -> medicao
+                                                                                .getDataHora()
+                                                                                .toLocalDate(),
+
+                                                                Collectors.mapping(
+                                                                                medicao -> medicao.getVolumeLitros(),
+
+                                                                                Collectors.reducing(
+                                                                                                BigDecimal.ZERO,
+
+                                                                                                (valor1, valor2) -> valor1
+                                                                                                                .add(valor2)))));
+
+                return consumoPorDia.entrySet()
+                                .stream()
+                                .map(entry -> new ConsumoDiarioDTO(
+                                                entry.getKey(),
+                                                entry.getValue()))
+                                .sorted(
+                                                Comparator.comparing(
+                                                                dto -> dto.getData()))
+                                .toList();
+        }
 }

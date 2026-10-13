@@ -1,3 +1,4 @@
+
 package com.tcc.backend.dto;
 
 import java.math.BigDecimal;
@@ -7,6 +8,7 @@ public class MedicaoDTO {
 
     private String medicaoId;
     private String deviceId;
+    private String deviceKey;
     private LocalDateTime dataHora;
     private BigDecimal vazao;
     private BigDecimal volumeLitros;
@@ -28,6 +30,14 @@ public class MedicaoDTO {
 
     public void setDeviceId(String deviceId) {
         this.deviceId = deviceId;
+    }
+
+    public String getDeviceKey() {
+        return deviceKey;
+    }
+
+    public void setDeviceKey(String deviceKey) {
+        this.deviceKey = deviceKey;
     }
 
     public LocalDateTime getDataHora() {

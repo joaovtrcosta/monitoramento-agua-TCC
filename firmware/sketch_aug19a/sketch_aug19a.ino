@@ -38,7 +38,7 @@ unsigned long ultimaMedicao = 0;
 // ======================================================
 
 const char *servidor =
-    "http://192.168.1.9:8080/api/medicoes";
+    "http://192.168.1.8:8080/api/medicoes";
 
 const char *DEVICE_ID = "ESP32-001";
 // ======================================================
@@ -283,6 +283,7 @@ bool sincronizarRTCComInternet() {
 // ENVIAR MEDICAO PARA API
 // ======================================================
 
+
 bool enviarMedicao(
     String medicaoId,
     String dataHora,
@@ -290,15 +291,8 @@ bool enviarMedicao(
     float volumeLitros
 ) {
 
-  if (
-      WiFi.status() !=
-      WL_CONNECTED
-  ) {
-
-    Serial.println(
-        "Sem Wi-Fi. Medicao nao enviada."
-    );
-
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("Sem Wi-Fi. Medicao nao enviada.");
     return false;
   }
 
@@ -317,9 +311,13 @@ bool enviarMedicao(
   json += medicaoId;
   json += "\",";
 
-  // ID DO DISPOSITIVO
   json += "\"deviceId\":\"";
   json += DEVICE_ID;
+  json += "\",";
+
+  // Chave de autenticacao do dispositivo
+  json += "\"deviceKey\":\"";
+  json += DEVICE_KEY;
   json += "\",";
 
   json += "\"dataHora\":\"";
@@ -336,56 +334,39 @@ bool enviarMedicao(
   json += "}";
 
   Serial.println();
+  Serial.println("Enviando medicao para a API...");
+  Serial.print("Dispositivo: ");
+  Serial.println(DEVICE_ID);
 
-  Serial.println(
-      "Enviando para API:"
-  );
+  // Nao imprimir o JSON completo, pois ele contem a chave secreta.
+  int codigoHttp = http.POST(json);
 
-  Serial.println(json);
-
-  int codigoHttp =
-      http.POST(json);
+  bool sucesso = false;
 
   if (codigoHttp > 0) {
 
-    Serial.print(
-        "HTTP: "
-    );
+    Serial.print("HTTP: ");
+    Serial.println(codigoHttp);
 
-    Serial.println(
-        codigoHttp
-    );
+    String resposta = http.getString();
 
-    String resposta =
-        http.getString();
+    Serial.println("Resposta da API:");
+    Serial.println(resposta);
 
-    Serial.println(
-        "Resposta:"
-    );
-
-    Serial.println(
-        resposta
-    );
+    sucesso =
+        codigoHttp >= 200 &&
+        codigoHttp < 300;
 
   } else {
 
-    Serial.print(
-        "Erro HTTP: "
-    );
-
-    Serial.println(
-        codigoHttp
-    );
+    Serial.print("Erro HTTP: ");
+    Serial.println(codigoHttp);
   }
 
   http.end();
 
-  return (
-      codigoHttp >= 200 &&
-      codigoHttp < 300
-  );
+  return sucesso;
 }
-
 
 // ======================================================
 // SALVAR MEDICAO PENDENTE

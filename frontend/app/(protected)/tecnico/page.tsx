@@ -151,7 +151,7 @@ export default function TecnicoPage() {
                   <Link
                     key={secao.href}
                     href={secao.href}
-                    className="group rounded-2xl border border-white/10 bg-white/[0.03] p-6 transition duration-300 hover:-translate-y-1 hover:border-blue-400/30 hover:bg-blue-500/[0.05]"
+                    className="group rounded-2xl border border-white/10 bg-white/3 p-6 transition duration-300 hover:-translate-y-1 hover:border-blue-400/30 hover:bg-blue-500/5"
                   >
                     <div className="mb-6 flex items-center justify-between">
                       <div className="rounded-xl border border-blue-400/15 bg-blue-500/10 p-3 text-blue-400">

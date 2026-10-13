@@ -29,18 +29,15 @@ public class UsuarioController {
         Usuario usuarioSalvo = usuarioService.salvar(usuario);
 
         return ResponseEntity.ok(
-                UsuarioResponseDTO.fromEntity(usuarioSalvo)
-        );
+                UsuarioResponseDTO.fromEntity(usuarioSalvo));
     }
 
     @GetMapping
     public ResponseEntity<List<UsuarioResponseDTO>> listarTodos() {
-
-        List<UsuarioResponseDTO> usuarios =
-                usuarioService.listarTodos()
-                        .stream()
-                        .map(UsuarioResponseDTO::fromEntity)
-                        .toList();
+        List<UsuarioResponseDTO> usuarios = usuarioService.listarTodos()
+                .stream()
+                .map(UsuarioResponseDTO::fromEntity)
+                .toList();
 
         return ResponseEntity.ok(usuarios);
     }
@@ -52,7 +49,23 @@ public class UsuarioController {
         Usuario usuario = usuarioService.buscarPorId(id);
 
         return ResponseEntity.ok(
-                UsuarioResponseDTO.fromEntity(usuario)
-        );
+                UsuarioResponseDTO.fromEntity(usuario));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<UsuarioResponseDTO> atualizar(
+            @PathVariable UUID id,
+            @RequestBody Usuario dados) {
+
+        Usuario usuarioAtualizado = usuarioService.atualizar(id, dados);
+
+        return ResponseEntity.ok(
+                UsuarioResponseDTO.fromEntity(usuarioAtualizado));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> excluir(@PathVariable UUID id) {
+        usuarioService.excluir(id);
+        return ResponseEntity.noContent().build();
     }
 }
