@@ -24,7 +24,9 @@ export const metadata: Metadata = {
   description: "Monitoramento inteligente do consumo residencial de água",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+}: LayoutProps<"/">) {
   return (
     <html
       lang="pt-BR"

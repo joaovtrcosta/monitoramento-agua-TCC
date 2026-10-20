@@ -1,3 +1,4 @@
+
 package com.tcc.backend.service;
 
 import com.tcc.backend.dto.ConsumoDiarioDTO;
@@ -20,6 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import com.tcc.backend.dto.RelatorioMensalDTO;
+import java.util.ArrayList;
 
 @Service
 public class MedicaoService {
@@ -50,7 +53,6 @@ public class MedicaoService {
                                         "O identificador e a chave do dispositivo são obrigatórios.");
                 }
 
-                // Localiza o dispositivo usando o identificador e a chave.
                 Dispositivo dispositivo = dispositivoRepository
                                 .findByDeviceIdAndDeviceKey(
                                                 dto.getDeviceId().trim(),
@@ -58,13 +60,11 @@ public class MedicaoService {
                                 .orElseThrow(() -> new IllegalArgumentException(
                                                 "Identificador ou chave do dispositivo inválidos."));
 
-                // Impede o envio de medições por dispositivos inativos.
                 if (!dispositivo.isAtivo()) {
                         throw new IllegalArgumentException(
                                         "Dispositivo está inativo. O envio de medições foi bloqueado.");
                 }
 
-                // Verifica se a medição já foi recebida anteriormente.
                 if (dto.getMedicaoId() == null || dto.getMedicaoId().isBlank()) {
                         throw new IllegalArgumentException(
                                         "O identificador da medição é obrigatório.");
@@ -76,7 +76,6 @@ public class MedicaoService {
                         return medicaoExistente.get();
                 }
 
-                // Cria e salva a nova medição.
                 Medicao medicao = new Medicao();
 
                 medicao.setMedicaoId(dto.getMedicaoId());
@@ -92,6 +91,26 @@ public class MedicaoService {
 
                 return medicaoRepository
                                 .findByDispositivo_Residencia_Usuario_Email(email);
+        }
+
+        // Lista as medições de um dia específico para o usuário.
+        public List<Medicao> listarPorData(
+                        LocalDate data,
+                        String email) {
+
+                if (data == null) {
+                        throw new IllegalArgumentException(
+                                        "A data para consulta é obrigatória.");
+                }
+
+                LocalDateTime inicio = data.atStartOfDay();
+                LocalDateTime fim = data.plusDays(1).atStartOfDay();
+
+                return medicaoRepository
+                                .findByDispositivo_Residencia_Usuario_EmailAndDataHoraGreaterThanEqualAndDataHoraLessThan(
+                                                email,
+                                                inicio,
+                                                fim);
         }
 
         public BigDecimal somarVolumeEntre(
@@ -118,6 +137,12 @@ public class MedicaoService {
                                 .atDay(1)
                                 .atStartOfDay();
 
+                boolean possuiMedicoes = medicaoRepository
+                                .existsByDispositivo_Residencia_Usuario_EmailAndDataHoraGreaterThanEqualAndDataHoraLessThan(
+                                                email,
+                                                inicio,
+                                                fim);
+
                 BigDecimal consumoLitros = medicaoRepository.somarVolumeEntreUsuario(
                                 inicio,
                                 fim,
@@ -132,6 +157,17 @@ public class MedicaoService {
                                 6,
                                 RoundingMode.HALF_UP);
 
+                // Sem medições, não apresenta uma estimativa de cobrança.
+                if (!possuiMedicoes) {
+                        return new ResumoMensalDTO(
+                                        consumoLitros,
+                                        consumoM3,
+                                        BigDecimal.ZERO.setScale(2),
+                                        BigDecimal.ZERO.setScale(2),
+                                        BigDecimal.ZERO.setScale(2));
+                }
+
+                // Com medições, aplica as regras tarifárias normalmente.
                 BigDecimal valorAgua = tarifaService.calcularValorAgua(
                                 consumoM3);
 
@@ -140,9 +176,7 @@ public class MedicaoService {
 
                 BigDecimal valorEstimado = valorAgua
                                 .add(valorEsgoto)
-                                .setScale(
-                                                2,
-                                                RoundingMode.HALF_UP);
+                                .setScale(2, RoundingMode.HALF_UP);
 
                 return new ResumoMensalDTO(
                                 consumoLitros,
@@ -174,27 +208,57 @@ public class MedicaoService {
                 Map<LocalDate, BigDecimal> consumoPorDia = medicoes.stream()
                                 .collect(
                                                 Collectors.groupingBy(
-                                                                medicao -> medicao
-                                                                                .getDataHora()
-                                                                                .toLocalDate(),
-
+                                                                medicao -> medicao.getDataHora().toLocalDate(),
                                                                 Collectors.mapping(
-                                                                                medicao -> medicao.getVolumeLitros(),
-
+                                                                                Medicao::getVolumeLitros,
                                                                                 Collectors.reducing(
                                                                                                 BigDecimal.ZERO,
-
-                                                                                                (valor1, valor2) -> valor1
-                                                                                                                .add(valor2)))));
+                                                                                                BigDecimal::add))));
 
                 return consumoPorDia.entrySet()
                                 .stream()
                                 .map(entry -> new ConsumoDiarioDTO(
                                                 entry.getKey(),
                                                 entry.getValue()))
-                                .sorted(
-                                                Comparator.comparing(
-                                                                dto -> dto.getData()))
+                                .sorted(Comparator.comparing(
+                                                ConsumoDiarioDTO::getData))
                                 .toList();
+        }
+
+        public List<RelatorioMensalDTO> gerarRelatorioMensal(
+                        int anoInicial,
+                        int mesInicial,
+                        int anoFinal,
+                        int mesFinal,
+                        String email) {
+
+                YearMonth inicio = YearMonth.of(anoInicial, mesInicial);
+                YearMonth fim = YearMonth.of(anoFinal, mesFinal);
+
+                if (fim.isBefore(inicio)) {
+                        throw new IllegalArgumentException(
+                                        "O período final não pode ser anterior ao inicial.");
+                }
+
+                List<RelatorioMensalDTO> relatorio = new ArrayList<>();
+
+                for (YearMonth periodo = inicio; !periodo.isAfter(fim); periodo = periodo.plusMonths(1)) {
+
+                        ResumoMensalDTO resumo = obterResumoMensal(
+                                        periodo.getYear(),
+                                        periodo.getMonthValue(),
+                                        email);
+
+                        relatorio.add(new RelatorioMensalDTO(
+                                        periodo.getYear(),
+                                        periodo.getMonthValue(),
+                                        resumo.getConsumoLitros(),
+                                        resumo.getConsumoM3(),
+                                        resumo.getValorAgua(),
+                                        resumo.getValorEsgoto(),
+                                        resumo.getValorEstimado()));
+                }
+
+                return relatorio;
         }
 }

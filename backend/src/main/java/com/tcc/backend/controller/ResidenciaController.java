@@ -1,4 +1,3 @@
-
 package com.tcc.backend.controller;
 
 import com.tcc.backend.entity.Residencia;

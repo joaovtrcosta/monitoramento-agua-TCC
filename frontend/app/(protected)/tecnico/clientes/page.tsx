@@ -212,13 +212,7 @@ export default function ClientesPage() {
   return (
     <main className="min-h-screen bg-[#020b24] px-4 py-8 text-white sm:px-6 md:px-10">
       <div className="mx-auto max-w-6xl">
-        <a
-          href="/tecnico"
-          className="mb-6 inline-block text-sm text-blue-300 transition hover:text-blue-200"
-        >
-          ← Voltar ao painel técnico
-        </a>
-
+        
         <div className="mb-8">
           <p className="mb-2 text-sm font-medium uppercase tracking-widest text-blue-400">
             Administração
@@ -259,7 +253,7 @@ export default function ClientesPage() {
 
             <button
               onClick={abrirCadastro}
-              className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold transition hover:bg-blue-500"
+              className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold transition hover:bg-blue-500 cursor-pointer"
             >
               + Novo cliente
             </button>
@@ -303,14 +297,14 @@ export default function ClientesPage() {
                           <div className="flex gap-3">
                             <button
                               onClick={() => abrirEdicao(cliente)}
-                              className="text-sm font-medium text-blue-300 hover:text-blue-200"
+                              className="text-sm font-medium text-blue-300 hover:text-blue-200 cursor-pointer"
                             >
                               Editar
                             </button>
                             <button
                               onClick={() => excluirCliente(cliente)}
                               disabled={excluindoId === cliente.id}
-                              className="text-sm font-medium text-red-400 hover:text-red-300 disabled:opacity-50"
+                              className="text-sm font-medium text-red-400 hover:text-red-300 disabled:opacity-50 cursor-pointer"
                             >
                               {excluindoId === cliente.id ? "Excluindo..." : "Excluir"}
                             </button>
@@ -338,14 +332,14 @@ export default function ClientesPage() {
                     <div className="mt-4 flex gap-4">
                       <button
                         onClick={() => abrirEdicao(cliente)}
-                        className="text-sm text-blue-300"
+                        className="text-sm text-blue-300 cursor-pointer"
                       >
                         Editar
                       </button>
                       <button
                         onClick={() => excluirCliente(cliente)}
                         disabled={excluindoId === cliente.id}
-                        className="text-sm text-red-400 disabled:opacity-50"
+                        className="text-sm text-red-400 disabled:opacity-50 "
                       >
                         {excluindoId === cliente.id ? "Excluindo..." : "Excluir"}
                       </button>
@@ -445,7 +439,7 @@ export default function ClientesPage() {
                     setErro("");
                   }}
                   disabled={salvando}
-                  className="rounded-lg border border-blue-900 px-5 py-3 text-sm text-slate-300 transition hover:bg-blue-950 disabled:opacity-50"
+                  className="rounded-lg border border-blue-900 px-5 py-3 text-sm text-slate-300 transition hover:bg-blue-950 disabled:opacity-50 cursor-pointer"
                 >
                   Cancelar
                 </button>
@@ -453,7 +447,7 @@ export default function ClientesPage() {
                 <button
                   type="submit"
                   disabled={salvando}
-                  className="rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
                 >
                   {salvando
                     ? "Salvando..."

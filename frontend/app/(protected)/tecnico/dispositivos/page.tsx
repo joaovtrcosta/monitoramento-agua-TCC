@@ -461,7 +461,7 @@ export default function DispositivosPage() {
                           <div className="flex justify-end gap-2">
                             <button
                               onClick={() => abrirEdicao(dispositivo)}
-                              className="rounded-lg border border-white/10 px-3 py-2 text-xs transition hover:bg-white/10"
+                              className="rounded-lg border border-white/10 px-3 py-2 text-xs transition hover:bg-white/10 cursor-pointer"
                             >
                               Editar
                             </button>
@@ -479,7 +479,7 @@ export default function DispositivosPage() {
 
                             <button
                               onClick={() => setConfirmacao(dispositivo)}
-                              className="rounded-lg border border-red-500/20 px-3 py-2 text-xs text-red-300 transition hover:bg-red-500/10"
+                              className="rounded-lg border border-red-500/20 px-3 py-2 text-xs text-red-300 transition hover:bg-red-500/10 cursor-pointer"
                             >
                               Excluir
                             </button>
@@ -517,7 +517,7 @@ export default function DispositivosPage() {
                 >
                   {editando ? "Editar dispositivo" : "Novo dispositivo"}
                 </h2>
-                <p className="mt-1 text-sm text-slate-400">
+                <p className="mt-1 text-sm text-slate-400 ">
                   {editando
                     ? "Atualize o identificador do dispositivo."
                     : "Cadastre um dispositivo e vincule-o a uma residência."}
@@ -526,7 +526,7 @@ export default function DispositivosPage() {
 
               <button
                 onClick={() => setModalAberto(false)}
-                className="text-2xl text-slate-400 hover:text-white"
+                className="text-2xl text-slate-400 hover:text-white cursor-pointer"
                 aria-label="Fechar modal"
               >
                 ×
@@ -605,7 +605,7 @@ export default function DispositivosPage() {
                 <button
                   type="button"
                   onClick={() => setModalAberto(false)}
-                  className="rounded-xl border border-white/10 px-5 py-3 text-sm hover:bg-white/5"
+                  className="rounded-xl border border-white/10 px-5 py-3 text-sm hover:bg-white/5 cursor-pointer"
                 >
                   Cancelar
                 </button>
@@ -613,7 +613,7 @@ export default function DispositivosPage() {
                 <button
                   type="submit"
                   disabled={!editando && residencias.length === 0}
-                  className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
                 >
                   {editando ? "Salvar alterações" : "Cadastrar dispositivo"}
                 </button>
@@ -643,13 +643,13 @@ export default function DispositivosPage() {
             <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
               <button
                 onClick={() => setConfirmacao(null)}
-                className="rounded-xl border border-white/10 px-4 py-3 text-sm hover:bg-white/5"
+                className="rounded-xl border border-white/10 px-4 py-3 text-sm hover:bg-white/5 cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 onClick={excluirDispositivo}
-                className="rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold hover:bg-red-500"
+                className="rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold hover:bg-red-500 cursor-pointer"
               >
                 Confirmar exclusão
               </button>

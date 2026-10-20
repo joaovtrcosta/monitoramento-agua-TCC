@@ -6,6 +6,7 @@ import com.tcc.backend.dto.MedicaoResponseDTO;
 import com.tcc.backend.dto.ResumoMensalDTO;
 import com.tcc.backend.entity.Medicao;
 import com.tcc.backend.service.MedicaoService;
+import com.tcc.backend.dto.RelatorioMensalDTO;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -21,109 +22,130 @@ import java.util.List;
 @CrossOrigin(origins = "http://localhost:3000")
 public class MedicaoController {
 
-    private final MedicaoService medicaoService;
+        private final MedicaoService medicaoService;
 
-    public MedicaoController(MedicaoService medicaoService) {
-        this.medicaoService = medicaoService;
-    }
+        public MedicaoController(MedicaoService medicaoService) {
+                this.medicaoService = medicaoService;
+        }
 
-    @PostMapping
-    public ResponseEntity<MedicaoResponseDTO> salvar(
-            @RequestBody MedicaoDTO dto) {
+        @PostMapping
+        public ResponseEntity<MedicaoResponseDTO> salvar(
+                        @RequestBody MedicaoDTO dto) {
 
-        Medicao novaMedicao =
-                medicaoService.salvar(dto);
+                Medicao novaMedicao = medicaoService.salvar(dto);
 
-        return ResponseEntity.ok(
-                converterParaDTO(novaMedicao)
-        );
-    }
+                return ResponseEntity.ok(
+                                converterParaDTO(novaMedicao));
+        }
 
-    @GetMapping
-    public ResponseEntity<List<MedicaoResponseDTO>> listarTodas(
-            Authentication authentication) {
+        @GetMapping
+        public ResponseEntity<List<MedicaoResponseDTO>> listarTodas(
+                        Authentication authentication) {
 
-        String email = authentication.getName();
+                String email = authentication.getName();
 
-        List<MedicaoResponseDTO> medicoes =
-                medicaoService
-                        .listarPorUsuario(email)
-                        .stream()
-                        .map(this::converterParaDTO)
-                        .toList();
+                List<MedicaoResponseDTO> medicoes = medicaoService.listarPorUsuario(email)
+                                .stream()
+                                .map(this::converterParaDTO)
+                                .toList();
 
-        return ResponseEntity.ok(medicoes);
-    }
+                return ResponseEntity.ok(medicoes);
+        }
 
-    @GetMapping("/hoje")
-    public ResponseEntity<BigDecimal> consumoHoje(
-            Authentication authentication) {
+        @GetMapping("/hoje")
+        public ResponseEntity<BigDecimal> consumoHoje(
+                        Authentication authentication) {
 
-        String email = authentication.getName();
+                String email = authentication.getName();
 
-        LocalDate hoje = LocalDate.now();
+                LocalDate hoje = LocalDate.now();
 
-        LocalDateTime inicio =
-                hoje.atStartOfDay();
+                LocalDateTime inicio = hoje.atStartOfDay();
+                LocalDateTime fim = hoje.plusDays(1).atStartOfDay();
 
-        LocalDateTime fim =
-                hoje.plusDays(1)
-                        .atStartOfDay();
+                BigDecimal consumo = medicaoService.somarVolumeEntre(
+                                inicio,
+                                fim,
+                                email);
 
-        BigDecimal consumo =
-                medicaoService.somarVolumeEntre(
-                        inicio,
-                        fim,
-                        email
-                );
+                return ResponseEntity.ok(consumo);
+        }
 
-        return ResponseEntity.ok(consumo);
-    }
+        // NOVO: consulta as medições de uma data específica.
+        @GetMapping("/por-data")
+        public ResponseEntity<List<MedicaoResponseDTO>> listarPorData(
+                        @RequestParam LocalDate data,
+                        Authentication authentication) {
 
-    @GetMapping("/resumo-mensal")
-    public ResponseEntity<ResumoMensalDTO> resumoMensal(
-            @RequestParam int ano,
-            @RequestParam int mes,
-            Authentication authentication) {
+                String email = authentication.getName();
 
-        String email = authentication.getName();
+                List<MedicaoResponseDTO> medicoes = medicaoService.listarPorData(data, email)
+                                .stream()
+                                .map(this::converterParaDTO)
+                                .toList();
 
-        ResumoMensalDTO resumo =
-                medicaoService.obterResumoMensal(
-                        ano,
-                        mes,
-                        email
-                );
+                return ResponseEntity.ok(medicoes);
+        }
 
-        return ResponseEntity.ok(resumo);
-    }
+        @GetMapping("/resumo-mensal")
+        public ResponseEntity<ResumoMensalDTO> resumoMensal(
+                        @RequestParam int ano,
+                        @RequestParam int mes,
+                        Authentication authentication) {
 
-    @GetMapping("/consumo-diario")
-    public ResponseEntity<List<ConsumoDiarioDTO>> consumoDiario(
-            @RequestParam int ano,
-            @RequestParam int mes,
-            Authentication authentication) {
+                String email = authentication.getName();
 
-        String email = authentication.getName();
+                ResumoMensalDTO resumo = medicaoService.obterResumoMensal(
+                                ano,
+                                mes,
+                                email);
 
-        List<ConsumoDiarioDTO> consumo =
-                medicaoService.obterConsumoDiario(
-                        ano,
-                        mes,
-                        email
-                );
+                return ResponseEntity.ok(resumo);
+        }
 
-        return ResponseEntity.ok(consumo);
-    }
+        @GetMapping("/consumo-diario")
+        public ResponseEntity<List<ConsumoDiarioDTO>> consumoDiario(
+                        @RequestParam int ano,
+                        @RequestParam int mes,
+                        Authentication authentication) {
 
-    private MedicaoResponseDTO converterParaDTO(
-            Medicao medicao) {
+                String email = authentication.getName();
 
-        return new MedicaoResponseDTO(
-                medicao.getMedicaoId(),
-                medicao.getDataHora(),
-                medicao.getVazao(),
-                medicao.getVolumeLitros()
-        );
-    }
+                List<ConsumoDiarioDTO> consumo = medicaoService.obterConsumoDiario(
+                                ano,
+                                mes,
+                                email);
+
+                return ResponseEntity.ok(consumo);
+        }
+
+        private MedicaoResponseDTO converterParaDTO(Medicao medicao) {
+
+                return new MedicaoResponseDTO(
+                                medicao.getMedicaoId(),
+                                medicao.getDataHora(),
+                                medicao.getVazao(),
+                                medicao.getVolumeLitros());
+        }
+
+        @GetMapping("/relatorio-mensal")
+        public ResponseEntity<List<RelatorioMensalDTO>> relatorioMensal(
+                        @RequestParam int anoInicial,
+                        @RequestParam int mesInicial,
+                        @RequestParam int anoFinal,
+                        @RequestParam int mesFinal,
+                        Authentication authentication) {
+
+                String email = authentication.getName();
+
+                List<RelatorioMensalDTO> relatorio = medicaoService.gerarRelatorioMensal(
+                                anoInicial,
+                                mesInicial,
+                                anoFinal,
+                                mesFinal,
+                                email);
+
+                return ResponseEntity.ok(relatorio);
+        }
+
 }

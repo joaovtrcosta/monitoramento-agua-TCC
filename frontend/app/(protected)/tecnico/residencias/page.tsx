@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
@@ -64,14 +63,14 @@ export default function ResidenciasPage() {
             ? "Sua sessão expirou. Entre novamente."
             : respostaUsuarios.status === 403
               ? "Você não tem permissão para acessar esta página."
-              : "Não foi possível carregar os clientes."
+              : "Não foi possível carregar os clientes.",
         );
       }
 
       const usuarios: Usuario[] = await respostaUsuarios.json();
 
       const listaClientes = usuarios.filter(
-        (usuario) => usuario.role === "USUARIO"
+        (usuario) => usuario.role === "USUARIO",
       );
 
       setClientes(listaClientes);
@@ -80,23 +79,22 @@ export default function ResidenciasPage() {
         listaClientes.map(async (cliente) => {
           const resposta = await fetch(
             `${API_URL}/residencias/usuario/${cliente.id}`,
-            { headers }
+            { headers },
           );
 
           if (!resposta.ok) {
             throw new Error(
-              `Não foi possível carregar as residências de ${cliente.nome}.`
+              `Não foi possível carregar as residências de ${cliente.nome}.`,
             );
           }
 
-          const lista: Omit<Residencia, "usuario">[] =
-            await resposta.json();
+          const lista: Omit<Residencia, "usuario">[] = await resposta.json();
 
           return lista.map((residencia) => ({
             ...residencia,
             usuario: cliente,
           }));
-        })
+        }),
       );
 
       setResidencias(resultados.flat());
@@ -104,7 +102,7 @@ export default function ResidenciasPage() {
       setErro(
         error instanceof Error
           ? error.message
-          : "Ocorreu um erro ao carregar os dados."
+          : "Ocorreu um erro ao carregar os dados.",
       );
     } finally {
       setCarregando(false);
@@ -135,9 +133,7 @@ export default function ResidenciasPage() {
     setModalAberto(true);
   }
 
-  async function salvarResidencia(
-    event: React.FormEvent<HTMLFormElement>
-  ) {
+  async function salvarResidencia(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErro("");
     setSucesso("");
@@ -182,7 +178,7 @@ export default function ResidenciasPage() {
 
         throw new Error(
           mensagem ||
-            `Não foi possível salvar a residência (HTTP ${resposta.status}).`
+            `Não foi possível salvar a residência (HTTP ${resposta.status}).`,
         );
       }
 
@@ -190,15 +186,13 @@ export default function ResidenciasPage() {
       setSucesso(
         residenciaEditando
           ? "Residência atualizada com sucesso."
-          : "Residência cadastrada com sucesso."
+          : "Residência cadastrada com sucesso.",
       );
 
       await carregarDados();
     } catch (error) {
       setErro(
-        error instanceof Error
-          ? error.message
-          : "Erro ao salvar a residência."
+        error instanceof Error ? error.message : "Erro ao salvar a residência.",
       );
     } finally {
       setSalvando(false);
@@ -207,7 +201,7 @@ export default function ResidenciasPage() {
 
   async function excluirResidencia(residencia: Residencia) {
     const confirmou = window.confirm(
-      `Deseja realmente excluir a residência "${residencia.nome}" de ${residencia.usuario.nome}?`
+      `Deseja realmente excluir a residência "${residencia.nome}" de ${residencia.usuario.nome}?`,
     );
 
     if (!confirmou) return;
@@ -223,22 +217,19 @@ export default function ResidenciasPage() {
         throw new Error("Sessão não encontrada. Faça login novamente.");
       }
 
-      const resposta = await fetch(
-        `${API_URL}/residencias/${residencia.id}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const resposta = await fetch(`${API_URL}/residencias/${residencia.id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!resposta.ok) {
         const mensagem = await resposta.text();
 
         throw new Error(
           mensagem ||
-            `Não foi possível excluir a residência (HTTP ${resposta.status}). Verifique se existem dispositivos vinculados.`
+            `Não foi possível excluir a residência (HTTP ${resposta.status}). Verifique se existem dispositivos vinculados.`,
         );
       }
 
@@ -248,7 +239,7 @@ export default function ResidenciasPage() {
       setErro(
         error instanceof Error
           ? error.message
-          : "Erro ao excluir a residência."
+          : "Erro ao excluir a residência.",
       );
     } finally {
       setExcluindoId(null);
@@ -259,19 +250,12 @@ export default function ResidenciasPage() {
     filtroCliente === "TODOS"
       ? residencias
       : residencias.filter(
-          (residencia) => residencia.usuario.id === filtroCliente
+          (residencia) => residencia.usuario.id === filtroCliente,
         );
 
   return (
     <main className="min-h-screen bg-[#020b24] px-4 py-8 text-white sm:px-6 md:px-10">
       <div className="mx-auto max-w-7xl">
-        <a
-          href="/tecnico"
-          className="mb-6 inline-block text-sm text-blue-300 transition hover:text-blue-200"
-        >
-          ← Voltar ao painel técnico
-        </a>
-
         <div className="mb-8">
           <p className="mb-2 text-sm font-medium uppercase tracking-widest text-blue-400">
             Administração
@@ -301,9 +285,7 @@ export default function ResidenciasPage() {
         <section className="overflow-hidden rounded-2xl border border-blue-900/60 bg-[#07142f] shadow-xl">
           <div className="flex flex-col gap-4 border-b border-blue-900/60 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
             <div>
-              <h2 className="text-lg font-semibold">
-                Residências cadastradas
-              </h2>
+              <h2 className="text-lg font-semibold">Residências cadastradas</h2>
 
               {!carregando && (
                 <p className="mt-1 text-sm text-slate-400">
@@ -325,10 +307,7 @@ export default function ResidenciasPage() {
           </div>
 
           <div className="flex flex-col gap-2 border-b border-blue-900/40 px-5 py-4 sm:flex-row sm:items-center sm:px-6">
-            <label
-              htmlFor="filtro-cliente"
-              className="text-sm text-slate-400"
-            >
+            <label htmlFor="filtro-cliente" className="text-sm text-slate-400">
               Filtrar por cliente:
             </label>
 
@@ -406,7 +385,7 @@ export default function ResidenciasPage() {
                           <div className="flex gap-3">
                             <button
                               onClick={() => abrirEdicao(residencia)}
-                              className="text-sm font-medium text-blue-300 hover:text-blue-200"
+                              className="text-sm font-medium text-blue-300 hover:text-blue-200 cursor-pointer"
                             >
                               Editar
                             </button>
@@ -414,7 +393,7 @@ export default function ResidenciasPage() {
                             <button
                               onClick={() => excluirResidencia(residencia)}
                               disabled={excluindoId === residencia.id}
-                              className="text-sm font-medium text-red-400 hover:text-red-300 disabled:opacity-50"
+                              className="text-sm font-medium text-red-400 hover:text-red-300 disabled:opacity-50 cursor-pointer"
                             >
                               {excluindoId === residencia.id
                                 ? "Excluindo..."
@@ -455,7 +434,7 @@ export default function ResidenciasPage() {
                     <div className="mt-4 flex gap-4">
                       <button
                         onClick={() => abrirEdicao(residencia)}
-                        className="text-sm text-blue-300"
+                        className="text-sm text-blue-300 cursor-pointer"
                       >
                         Editar
                       </button>
@@ -463,7 +442,7 @@ export default function ResidenciasPage() {
                       <button
                         onClick={() => excluirResidencia(residencia)}
                         disabled={excluindoId === residencia.id}
-                        className="text-sm text-red-400 disabled:opacity-50"
+                        className="text-sm text-red-400 disabled:opacity-50 cursor-pointer"
                       >
                         {excluindoId === residencia.id
                           ? "Excluindo..."
@@ -487,9 +466,7 @@ export default function ResidenciasPage() {
             className="my-auto w-full max-w-lg rounded-2xl border border-blue-900/70 bg-[#07142f] p-6 shadow-2xl sm:p-8"
           >
             <h2 id="modal-titulo" className="text-2xl font-bold">
-              {residenciaEditando
-                ? "Editar residência"
-                : "Nova residência"}
+              {residenciaEditando ? "Editar residência" : "Nova residência"}
             </h2>
 
             <p className="mb-6 mt-2 text-sm text-slate-400">
@@ -585,7 +562,7 @@ export default function ResidenciasPage() {
                     setErro("");
                   }}
                   disabled={salvando}
-                  className="rounded-lg border border-blue-900 px-5 py-3 text-sm text-slate-300 transition hover:bg-blue-950 disabled:opacity-50"
+                  className="rounded-lg border border-blue-900 px-5 py-3 text-sm text-slate-300 transition hover:bg-blue-950 disabled:opacity-50 cursor-pointer"
                 >
                   Cancelar
                 </button>
@@ -593,7 +570,7 @@ export default function ResidenciasPage() {
                 <button
                   type="submit"
                   disabled={salvando || clientes.length === 0}
-                  className="rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
                 >
                   {salvando
                     ? "Salvando..."
