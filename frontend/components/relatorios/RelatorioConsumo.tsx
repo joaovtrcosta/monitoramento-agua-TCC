@@ -343,7 +343,20 @@ export default function RelatorioConsumo() {
                   </p>
                 </div>
 
-                <div className="overflow-x-auto">
+                <div
+                  className="
+    overflow-x-auto
+    mx-3 mb-3
+    rounded-lg
+    scrollbar-thin
+    [scrollbar-color:#3b82f6_#07142f]
+    [&::-webkit-scrollbar]:h-1.5
+    [&::-webkit-scrollbar-track]:bg-[#07142f]
+    [&::-webkit-scrollbar-thumb]:rounded-full
+    [&::-webkit-scrollbar-thumb]:bg-blue-500
+    [&::-webkit-scrollbar-thumb:hover]:bg-blue-400
+  "
+                >
                   <table className="w-full min-w-187.5 text-left">
                     <thead>
                       <tr className="border-b border-blue-400/10 bg-[#030d29]/70">
@@ -438,7 +451,7 @@ export default function RelatorioConsumo() {
           </div>
         )}
 
-        <footer className="mt-8 flex flex-col justify-between gap-2 border-t border-blue-400/10 py-6 text-xs text-slate-500 sm:flex-row">
+        <footer className="mt-8 flex flex-col items-center justify-center gap-2 border-t border-blue-400/10 py-6 text-center text-xs text-slate-500">
           <p>Monitoramento inteligente de água</p>
           <p>Projeto de TCC · 2026</p>
         </footer>

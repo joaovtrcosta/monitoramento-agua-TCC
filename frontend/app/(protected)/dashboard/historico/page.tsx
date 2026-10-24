@@ -2,7 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Calendar } from "@/components/ui/calendar";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  CalendarIcon,
   Activity,
   AlertTriangle,
   CalendarDays,
@@ -72,6 +79,99 @@ function formatarHorario(dataHora: string) {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function CampoData({
+  id,
+  valor,
+  onChange,
+  min,
+}: {
+  id: string;
+  valor: string;
+  onChange: (data: string) => void;
+  min?: string;
+}) {
+  const [aberto, setAberto] = useState(false);
+
+  const formatarISO = (data: Date) => {
+    const ano = data.getFullYear();
+    const mes = String(data.getMonth() + 1).padStart(2, "0");
+    const dia = String(data.getDate()).padStart(2, "0");
+
+    return `${ano}-${mes}-${dia}`;
+  };
+
+  const dataSelecionada = valor ? new Date(`${valor}T12:00:00`) : undefined;
+
+  return (
+    <Popover open={aberto} onOpenChange={setAberto}>
+      <PopoverTrigger
+        render={
+          <button
+            id={id}
+            type="button"
+            className="flex w-full items-center justify-between rounded-xl border border-blue-400/15 bg-[#071633] px-4 py-3 text-left text-sm text-white transition hover:border-blue-400/40 focus:outline-none focus:ring-1 focus:ring-blue-400/50"
+          >
+            <span className={valor ? "text-white" : "text-slate-500"}>
+              {dataSelecionada
+                ? dataSelecionada.toLocaleDateString("pt-BR")
+                : "Selecione uma data"}
+            </span>
+
+            <CalendarIcon className="h-4 w-4 text-blue-400" />
+          </button>
+        }
+      />
+
+      <PopoverContent
+        align="start"
+        sideOffset={8}
+        className="w-auto rounded-2xl border border-blue-400/20 bg-[#07142f] p-3 text-slate-100 shadow-xl shadow-black/40"
+      >
+        <Calendar
+          mode="single"
+          selected={dataSelecionada}
+          onSelect={(data) => {
+            if (!data) return;
+
+            onChange(formatarISO(data));
+            setAberto(false);
+          }}
+          disabled={(data) => (min ? formatarISO(data) < min : false)}
+          className="rounded-xl bg-[#07142f] text-slate-100"
+        />
+
+        <div className="mt-2 flex items-center justify-between border-t border-blue-400/10 pt-3">
+          <button
+            type="button"
+            onClick={() => {
+              onChange("");
+              setAberto(false);
+            }}
+            className="text-xs font-medium text-blue-400 hover:text-blue-300"
+          >
+            Limpar
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              const hoje = formatarISO(new Date());
+
+              if (!min || hoje >= min) {
+                onChange(hoje);
+                setAberto(false);
+              }
+            }}
+            className="text-xs font-medium text-blue-400 hover:text-blue-300"
+          >
+            Hoje
+          </button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
 }
 
 export default function HistoricoPage() {
@@ -218,7 +318,6 @@ export default function HistoricoPage() {
 
   return (
     <div className="space-y-6">
-      {/* Cabeçalho */}
       <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-blue-400">
@@ -351,15 +450,13 @@ export default function HistoricoPage() {
               Data inicial
             </label>
 
-            <input
+            <CampoData
               id="data-inicio"
-              type="date"
-              value={dataInicio}
-              onChange={(evento) => {
-                setDataInicio(evento.target.value);
+              valor={dataInicio}
+              onChange={(data) => {
+                setDataInicio(data);
                 setPaginaAtual(1);
               }}
-              className={input}
             />
           </div>
 
@@ -371,16 +468,14 @@ export default function HistoricoPage() {
               Data final
             </label>
 
-            <input
+            <CampoData
               id="data-fim"
-              type="date"
-              value={dataFim}
-              min={dataInicio || undefined}
-              onChange={(evento) => {
-                setDataFim(evento.target.value);
+              valor={dataFim}
+              min={dataInicio}
+              onChange={(data) => {
+                setDataFim(data);
                 setPaginaAtual(1);
               }}
-              className={input}
             />
           </div>
         </div>
@@ -418,7 +513,21 @@ export default function HistoricoPage() {
           </span>
         </div>
 
-        <div className="overflow-x-auto rounded-xl border border-blue-400/10">
+        <div
+          className="
+    overflow-x-auto
+    mx-5 mb-4
+    rounded-xl
+    border border-blue-400/10
+    scrollbar-thin
+    [scrollbar-color:#3b82f6_#07142f]
+    [&::-webkit-scrollbar]:h-1.5
+    [&::-webkit-scrollbar-track]:bg-[#07142f]
+    [&::-webkit-scrollbar-thumb]:rounded-full
+    [&::-webkit-scrollbar-thumb]:bg-blue-500
+    [&::-webkit-scrollbar-thumb:hover]:bg-blue-400
+  "
+        >
           <table className="w-full min-w-162.5 text-left text-sm">
             <thead className="bg-[#0b1d3d] text-xs uppercase tracking-wider text-slate-400">
               <tr>
@@ -541,6 +650,11 @@ export default function HistoricoPage() {
           </div>
         )}
       </section>
+
+      <footer className="mt-8 flex flex-col items-center justify-center gap-2 border-t border-blue-400/10 py-6 text-center text-xs text-slate-500">
+        <p>Monitoramento inteligente de água</p>
+        <p>Projeto de TCC · 2026</p>
+      </footer>
     </div>
   );
 }

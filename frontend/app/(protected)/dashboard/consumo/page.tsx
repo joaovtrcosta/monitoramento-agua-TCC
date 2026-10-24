@@ -33,6 +33,7 @@ type ConsumoDiario = {
   data: string;
   dia: number;
   consumoLitros: number;
+  consumoGrafico: number | null;
 };
 
 const API = "http://localhost:8080/api/medicoes";
@@ -153,6 +154,7 @@ export default function ConsumoPage() {
         data,
         dia,
         consumoLitros: acumulado.get(data) ?? 0,
+        consumoGrafico: acumulado.has(data) ? acumulado.get(data)! : null,
       });
     }
 
@@ -363,8 +365,9 @@ export default function ConsumoPage() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={consumoPorDia}
+                barCategoryGap="20%"
                 margin={{
-                  top: 10,
+                  top: 15,
                   right: 10,
                   left: 0,
                   bottom: 5,
@@ -378,21 +381,48 @@ export default function ConsumoPage() {
 
                 <XAxis
                   dataKey="dia"
-                  stroke="#94a3b8"
-                  tick={{ fontSize: 11 }}
+                  stroke="#64748b"
+                  tick={{
+                    fontSize: 11,
+                    fill: "#94a3b8",
+                  }}
+                  tickLine={false}
+                  axisLine={false}
                   interval="preserveStartEnd"
+                  minTickGap={12}
                 />
 
-                <YAxis stroke="#94a3b8" tick={{ fontSize: 11 }} width={55} />
+                <YAxis
+                  stroke="#64748b"
+                  tick={{
+                    fontSize: 11,
+                    fill: "#94a3b8",
+                  }}
+                  tickLine={false}
+                  axisLine={false}
+                  width={45}
+                  domain={[0, "auto"]}
+                />
 
                 <Tooltip
+                  cursor={{
+                    fill: "rgba(59, 130, 246, 0.08)",
+                  }}
                   contentStyle={{
                     backgroundColor: "#081a36",
-                    border: "1px solid #1e40af",
+                    border: "1px solid rgba(59, 130, 246, 0.35)",
                     borderRadius: 12,
-                    color: "#fff",
+                    padding: "12px 16px",
+                    boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3)",
                   }}
-                  labelStyle={{ color: "#cbd5e1" }}
+                  labelStyle={{
+                    color: "#cbd5e1",
+                    fontWeight: 600,
+                    marginBottom: 6,
+                  }}
+                  itemStyle={{
+                    color: "#60a5fa",
+                  }}
                   formatter={(value) => [
                     `${formatarNumero(Number(value ?? 0))} L`,
                     "Consumo",
@@ -401,10 +431,16 @@ export default function ConsumoPage() {
                 />
 
                 <Bar
-                  dataKey="consumoLitros"
+                  dataKey="consumoGrafico"
+                  name="Consumo"
                   fill="#3b82f6"
                   radius={[5, 5, 0, 0]}
-                  maxBarSize={32}
+                  maxBarSize={28}
+                  activeBar={{
+                    fill: "#60a5fa",
+                    stroke: "#93c5fd",
+                    strokeWidth: 1,
+                  }}
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -494,6 +530,11 @@ export default function ConsumoPage() {
           </div>
         )}
       </section>
+
+      <footer className="mt-8 flex flex-col items-center justify-center gap-2 border-t border-blue-400/10 py-6 text-center text-xs text-slate-500">
+        <p>Monitoramento inteligente de água</p>
+        <p>Projeto de TCC · 2026</p>
+      </footer>
     </div>
   );
 }

@@ -485,7 +485,21 @@ export default function PrevisaoPage() {
                   </div>
                 </div>
 
-                <div className="overflow-x-auto rounded-xl border border-blue-400/10">
+                <div
+                  className="
+    overflow-x-auto
+    mx-7 mb-6
+    rounded-xl
+    border border-blue-400/10
+    scrollbar-thin
+    [scrollbar-color:#3b82f6_#07142f]
+    [&::-webkit-scrollbar]:h-1.5
+    [&::-webkit-scrollbar-track]:bg-[#07142f]
+    [&::-webkit-scrollbar-thumb]:rounded-full
+    [&::-webkit-scrollbar-thumb]:bg-blue-500
+    [&::-webkit-scrollbar-thumb:hover]:bg-blue-400
+  "
+                >
                   <table className="w-full min-w-112.5 text-left text-sm">
                     <thead className="bg-[#0b1d3d] text-xs uppercase tracking-wider text-slate-400">
                       <tr>
@@ -573,6 +587,11 @@ export default function PrevisaoPage() {
           )}
         </>
       )}
+
+      <footer className="mt-8 flex flex-col items-center justify-center gap-2 border-t border-blue-400/10 py-6 text-center text-xs text-slate-500">
+        <p>Monitoramento inteligente de água</p>
+        <p>Projeto de TCC · 2026</p>
+      </footer>
     </div>
   );
 }

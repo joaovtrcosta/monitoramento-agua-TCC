@@ -1,7 +1,13 @@
-
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const API_URL = "http://localhost:8080/api";
 
@@ -43,13 +49,10 @@ export default function DispositivosPage() {
   const [filtro, setFiltro] = useState("");
   const [filtroStatus, setFiltroStatus] = useState("TODOS");
 
-  const [confirmacao, setConfirmacao] =
-    useState<Dispositivo | null>(null);
+  const [confirmacao, setConfirmacao] = useState<Dispositivo | null>(null);
 
   const token =
-    typeof window !== "undefined"
-      ? localStorage.getItem("token")
-      : null;
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
   const headers = useCallback((): HeadersInit => {
     return {
@@ -82,23 +85,22 @@ export default function DispositivosPage() {
         listaClientes.map(async (cliente) => {
           const resposta = await fetch(
             `${API_URL}/residencias/usuario/${cliente.id}`,
-            { headers: headers() }
+            { headers: headers() },
           );
 
           if (!resposta.ok) {
             throw new Error(
-              `Não foi possível carregar as residências de ${cliente.nome}.`
+              `Não foi possível carregar as residências de ${cliente.nome}.`,
             );
           }
 
-          const lista: Omit<Residencia, "usuario">[] =
-            await resposta.json();
+          const lista: Omit<Residencia, "usuario">[] = await resposta.json();
 
           return lista.map((residencia) => ({
             ...residencia,
             usuario: cliente,
           }));
-        })
+        }),
       );
 
       const todasResidencias = respostasResidencias.flat();
@@ -108,12 +110,12 @@ export default function DispositivosPage() {
         todasResidencias.map(async (residencia) => {
           const resposta = await fetch(
             `${API_URL}/dispositivos/residencia/${residencia.id}`,
-            { headers: headers() }
+            { headers: headers() },
           );
 
           if (!resposta.ok) {
             throw new Error(
-              `Não foi possível carregar os dispositivos de ${residencia.nome}.`
+              `Não foi possível carregar os dispositivos de ${residencia.nome}.`,
             );
           }
 
@@ -124,7 +126,7 @@ export default function DispositivosPage() {
             residenciaId: residencia.id,
             residenciaNome: residencia.nome,
           }));
-        })
+        }),
       );
 
       setDispositivos(respostasDispositivos.flat());
@@ -132,7 +134,7 @@ export default function DispositivosPage() {
       setErro(
         error instanceof Error
           ? error.message
-          : "Ocorreu um erro ao carregar os dados."
+          : "Ocorreu um erro ao carregar os dados.",
       );
     } finally {
       setCarregando(false);
@@ -187,16 +189,14 @@ export default function DispositivosPage() {
 
       if (!resposta.ok) {
         const mensagem = await resposta.text();
-        throw new Error(
-          mensagem || "Não foi possível salvar o dispositivo."
-        );
+        throw new Error(mensagem || "Não foi possível salvar o dispositivo.");
       }
 
       setModalAberto(false);
       setSucesso(
         editando
           ? "Dispositivo atualizado com sucesso."
-          : "Dispositivo cadastrado com sucesso."
+          : "Dispositivo cadastrado com sucesso.",
       );
 
       await carregarDados();
@@ -204,7 +204,7 @@ export default function DispositivosPage() {
       setErro(
         error instanceof Error
           ? error.message
-          : "Erro ao salvar o dispositivo."
+          : "Erro ao salvar o dispositivo.",
       );
     }
   }
@@ -220,7 +220,7 @@ export default function DispositivosPage() {
           method: "PATCH",
           headers: headers(),
           body: JSON.stringify({ ativo: !dispositivo.ativo }),
-        }
+        },
       );
 
       if (!resposta.ok) {
@@ -231,15 +231,13 @@ export default function DispositivosPage() {
       setSucesso(
         dispositivo.ativo
           ? "Dispositivo desativado com sucesso."
-          : "Dispositivo ativado com sucesso."
+          : "Dispositivo ativado com sucesso.",
       );
 
       await carregarDados();
     } catch (error) {
       setErro(
-        error instanceof Error
-          ? error.message
-          : "Erro ao alterar o status."
+        error instanceof Error ? error.message : "Erro ao alterar o status.",
       );
     }
   }
@@ -256,7 +254,7 @@ export default function DispositivosPage() {
         {
           method: "DELETE",
           headers: headers(),
-        }
+        },
       );
 
       if (!resposta.ok) {
@@ -271,14 +269,14 @@ export default function DispositivosPage() {
       setErro(
         error instanceof Error
           ? error.message
-          : "Erro ao excluir o dispositivo."
+          : "Erro ao excluir o dispositivo.",
       );
     }
   }
 
   const dispositivosFiltrados = dispositivos.filter((dispositivo) => {
     const residencia = residencias.find(
-      (item) => item.id === dispositivo.residenciaId
+      (item) => item.id === dispositivo.residenciaId,
     );
 
     const cliente = residencia?.usuario;
@@ -309,9 +307,7 @@ export default function DispositivosPage() {
             <p className="mb-2 text-sm font-medium text-blue-400">
               PAINEL TÉCNICO / GERENCIAMENTO
             </p>
-            <h1 className="text-3xl font-bold sm:text-4xl">
-              Dispositivos
-            </h1>
+            <h1 className="text-3xl font-bold sm:text-4xl">Dispositivos</h1>
             <p className="mt-2 text-sm text-slate-400">
               Gerencie os dispositivos IoT vinculados às residências.
             </p>
@@ -351,10 +347,7 @@ export default function DispositivosPage() {
         )}
 
         <div className="mb-6 grid gap-4 sm:grid-cols-3">
-          <Resumo
-            titulo="Total de dispositivos"
-            valor={dispositivos.length}
-          />
+          <Resumo titulo="Total de dispositivos" valor={dispositivos.length} />
           <Resumo titulo="Ativos" valor={totalAtivos} />
           <Resumo titulo="Inativos" valor={totalInativos} />
         </div>
@@ -369,15 +362,67 @@ export default function DispositivosPage() {
               className="min-w-0 flex-1 rounded-xl border border-white/10 bg-[#07132e] px-4 py-3 text-sm outline-none transition placeholder:text-slate-500 focus:border-blue-500"
             />
 
-            <select
+            <Select
               value={filtroStatus}
-              onChange={(event) => setFiltroStatus(event.target.value)}
-              className="rounded-xl border border-white/10 bg-[#07132e] px-4 py-3 text-sm outline-none focus:border-blue-500"
+              onValueChange={(valor) => {
+                if (valor !== null) {
+                  setFiltroStatus(valor);
+                }
+              }}
             >
-              <option value="TODOS">Todos os status</option>
-              <option value="ATIVO">Ativos</option>
-              <option value="INATIVO">Inativos</option>
-            </select>
+              <SelectTrigger
+                className="
+      h-12! w-full cursor-pointer
+      rounded-xl border border-blue-400/20
+      bg-[#07132e] px-4 text-sm text-slate-100
+      shadow-none
+      hover:border-blue-400/40
+      focus-visible:border-blue-400
+      md:w-52
+    "
+              >
+                <SelectValue>
+                  {filtroStatus === "TODOS"
+                    ? "Todos os status"
+                    : filtroStatus === "ATIVO"
+                      ? "Ativos"
+                      : "Inativos"}
+                </SelectValue>
+              </SelectTrigger>
+
+              <SelectContent
+                align="start"
+                side="bottom"
+                sideOffset={6}
+                alignItemWithTrigger={false}
+                className="
+      rounded-xl border border-blue-400/20
+      bg-[#07142f] p-1 text-slate-100
+      shadow-xl shadow-black/40
+    "
+              >
+                <SelectItem
+                  value="TODOS"
+                  className="cursor-pointer text-slate-200 data-highlighted:bg-blue-500/20 data-highlighted:text-white"
+                >
+                  Todos os status
+                </SelectItem>
+
+                <SelectItem
+                  value="ATIVO"
+                  className="cursor-pointer text-slate-200 data-highlighted:bg-blue-500/20 data-highlighted:text-white"
+                >
+                  Ativos
+                </SelectItem>
+
+                <SelectItem
+                  value="INATIVO"
+                  className="cursor-pointer text-slate-200 data-highlighted:bg-blue-500/20 data-highlighted:text-white"
+                >
+                  Inativos
+                </SelectItem>
+              </SelectContent>
+            </Select>
 
             <button
               onClick={carregarDados}
@@ -400,7 +445,21 @@ export default function DispositivosPage() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div
+              className="
+    overflow-x-auto
+    rounded-lg
+    pb-3
+    scrollbar-thin
+    [scrollbar-color:#3b82f6_#07142f]
+    [&::-webkit-scrollbar]:h-1.5
+    [&::-webkit-scrollbar-track]:rounded-full
+    [&::-webkit-scrollbar-track]:bg-[#07142f]
+    [&::-webkit-scrollbar-thumb]:rounded-full
+    [&::-webkit-scrollbar-thumb]:bg-blue-500
+    [&::-webkit-scrollbar-thumb:hover]:bg-blue-400
+  "
+            >
               <table className="w-full min-w-190 text-left text-sm">
                 <thead>
                   <tr className="border-b border-white/10 text-slate-400">
@@ -408,16 +467,14 @@ export default function DispositivosPage() {
                     <th className="px-4 py-4 font-medium">Residência</th>
                     <th className="px-4 py-4 font-medium">Cliente</th>
                     <th className="px-4 py-4 font-medium">Status</th>
-                    <th className="px-4 py-4 text-right font-medium">
-                      Ações
-                    </th>
+                    <th className="px-4 py-4 text-right font-medium">Ações</th>
                   </tr>
                 </thead>
 
                 <tbody>
                   {dispositivosFiltrados.map((dispositivo) => {
                     const residencia = residencias.find(
-                      (item) => item.id === dispositivo.residenciaId
+                      (item) => item.id === dispositivo.residenciaId,
                     );
 
                     return (
@@ -495,10 +552,15 @@ export default function DispositivosPage() {
 
           {!carregando && dispositivos.length > 0 && (
             <p className="mt-4 text-xs text-slate-500">
-              Exibindo {dispositivosFiltrados.length} de {dispositivos.length} dispositivos.
+              Exibindo {dispositivosFiltrados.length} de {dispositivos.length}{" "}
+              dispositivos.
             </p>
           )}
         </section>
+        <footer className="mt-8 flex flex-col items-center justify-center gap-2 border-t border-blue-400/10 py-6 text-center text-xs text-slate-500">
+          <p>Monitoramento inteligente de água</p>
+          <p>Projeto de TCC · 2026</p>
+        </footer>
       </div>
 
       {modalAberto && (
@@ -511,10 +573,7 @@ export default function DispositivosPage() {
           >
             <div className="mb-6 flex items-start justify-between gap-4">
               <div>
-                <h2
-                  id="titulo-modal-dispositivo"
-                  className="text-xl font-bold"
-                >
+                <h2 id="titulo-modal-dispositivo" className="text-xl font-bold">
                   {editando ? "Editar dispositivo" : "Novo dispositivo"}
                 </h2>
                 <p className="mt-1 text-sm text-slate-400 ">
@@ -560,20 +619,67 @@ export default function DispositivosPage() {
                   >
                     Residência
                   </label>
-                  <select
-                    id="residenciaId"
-                    value={residenciaId}
-                    onChange={(event) => setResidenciaId(event.target.value)}
-                    required
-                    className="w-full rounded-xl border border-white/10 bg-[#020b24] px-4 py-3 outline-none focus:border-blue-500"
+
+                  <Select
+                    value={residenciaId || null}
+                    onValueChange={(valor) => {
+                      setResidenciaId(valor ?? "");
+                    }}
                   >
-                    <option value="">Selecione uma residência</option>
-                    {residencias.map((residencia) => (
-                      <option key={residencia.id} value={residencia.id}>
-                        {residencia.nome} — {residencia.usuario.nome}
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger
+                      id="residenciaId"
+                      className="
+      h-12! w-full cursor-pointer
+      rounded-xl border border-blue-400/20
+      bg-[#020b24] px-4 text-sm text-slate-100
+      shadow-none
+      hover:border-blue-400/40
+      focus-visible:border-blue-400
+    "
+                    >
+                      <SelectValue>
+                        {residenciaId
+                          ? (() => {
+                              const residencia = residencias.find(
+                                (item) => item.id === residenciaId,
+                              );
+
+                              return residencia
+                                ? `${residencia.nome} — ${residencia.usuario.nome}`
+                                : "Selecione uma residência";
+                            })()
+                          : "Selecione uma residência"}
+                      </SelectValue>
+                    </SelectTrigger>
+
+                    <SelectContent
+                      align="start"
+                      side="bottom"
+                      sideOffset={6}
+                      alignItemWithTrigger={false}
+                      className="
+      max-h-60 rounded-xl
+      border border-blue-400/20
+      bg-[#07142f] p-1 text-slate-100
+      shadow-xl shadow-black/40
+    "
+                    >
+                      {residencias.map((residencia) => (
+                        <SelectItem
+                          key={residencia.id}
+                          value={residencia.id}
+                          className="
+      cursor-pointer
+      text-slate-200
+      data-highlighted:bg-blue-500/20
+      data-highlighted:text-white
+    "
+                        >
+                          {residencia.nome} — {residencia.usuario.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
 
                   {residencias.length === 0 && (
                     <p className="mt-2 text-xs text-amber-300">
@@ -586,11 +692,10 @@ export default function DispositivosPage() {
               {editando && (
                 <div className="rounded-xl border border-white/10 bg-white/3 p-4 text-sm">
                   <p className="text-slate-400">Residência vinculada</p>
-                  <p className="mt-1 font-medium">
-                    {editando.residenciaNome}
-                  </p>
+                  <p className="mt-1 font-medium">{editando.residenciaNome}</p>
                   <p className="mt-3 text-xs text-slate-500">
-                    A chave de autenticação e o vínculo da residência não são alterados aqui.
+                    A chave de autenticação e o vínculo da residência não são
+                    alterados aqui.
                   </p>
                 </div>
               )}

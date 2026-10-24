@@ -13,6 +13,7 @@ const API_URL = "http://localhost:8080/api/usuarios";
 
 export default function ClientesPage() {
   const [clientes, setClientes] = useState<Usuario[]>([]);
+  const [busca, setBusca] = useState("");
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState("");
@@ -21,7 +22,7 @@ export default function ClientesPage() {
   const [clienteEditando, setClienteEditando] = useState<Usuario | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [excluindoId, setExcluindoId] = useState<string | null>(null);
-
+  const [confirmacao, setConfirmacao] = useState<Usuario | null>(null);
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
@@ -48,7 +49,7 @@ export default function ClientesPage() {
             ? "Sua sessão expirou. Entre novamente."
             : resposta.status === 403
               ? "Você não tem permissão para acessar os clientes."
-              : "Não foi possível carregar os clientes."
+              : "Não foi possível carregar os clientes.",
         );
       }
 
@@ -59,7 +60,7 @@ export default function ClientesPage() {
       setErro(
         error instanceof Error
           ? error.message
-          : "Erro ao carregar os clientes."
+          : "Erro ao carregar os clientes.",
       );
     } finally {
       setCarregando(false);
@@ -137,13 +138,14 @@ export default function ClientesPage() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(corpo),
-        }
+        },
       );
 
       if (!resposta.ok) {
         const mensagem = await resposta.text();
         throw new Error(
-          mensagem || `Não foi possível salvar o cliente (HTTP ${resposta.status}).`
+          mensagem ||
+            `Não foi possível salvar o cliente (HTTP ${resposta.status}).`,
         );
       }
 
@@ -151,25 +153,23 @@ export default function ClientesPage() {
       setSucesso(
         clienteEditando
           ? "Cliente atualizado com sucesso."
-          : "Cliente cadastrado com sucesso."
+          : "Cliente cadastrado com sucesso.",
       );
 
       await carregarClientes();
     } catch (error) {
       setErro(
-        error instanceof Error ? error.message : "Erro ao salvar o cliente."
+        error instanceof Error ? error.message : "Erro ao salvar o cliente.",
       );
     } finally {
       setSalvando(false);
     }
   }
 
-  async function excluirCliente(cliente: Usuario) {
-    const confirmou = window.confirm(
-      `Deseja realmente excluir o cliente ${cliente.nome}?`
-    );
+  async function excluirCliente() {
+    if (!confirmacao || excluindoId) return;
 
-    if (!confirmou) return;
+    const cliente = confirmacao;
 
     setErro("");
     setSucesso("");
@@ -184,7 +184,9 @@ export default function ClientesPage() {
 
       const resposta = await fetch(`${API_URL}/${cliente.id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       if (!resposta.ok) {
@@ -194,25 +196,36 @@ export default function ClientesPage() {
           mensagem ||
             (resposta.status === 409
               ? "Não é possível excluir um cliente que possui residências."
-              : `Não foi possível excluir o cliente (HTTP ${resposta.status}).`)
+              : `Não foi possível excluir o cliente (HTTP ${resposta.status}).`),
         );
       }
 
-      setSucesso("Cliente excluído com sucesso.");
+      setConfirmacao(null);
+
       await carregarClientes();
+
+      setSucesso("Cliente excluído com sucesso.");
     } catch (error) {
       setErro(
-        error instanceof Error ? error.message : "Erro ao excluir o cliente."
+        error instanceof Error ? error.message : "Erro ao excluir o cliente.",
       );
     } finally {
       setExcluindoId(null);
     }
   }
 
+  const clientesFiltrados = clientes.filter((cliente) => {
+    const termo = busca.trim().toLocaleLowerCase("pt-BR");
+
+    return (
+      cliente.nome.toLocaleLowerCase("pt-BR").includes(termo) ||
+      cliente.email.toLocaleLowerCase("pt-BR").includes(termo)
+    );
+  });
+
   return (
     <main className="min-h-screen bg-[#020b24] px-4 py-8 text-white sm:px-6 md:px-10">
       <div className="mx-auto max-w-6xl">
-        
         <div className="mb-8">
           <p className="mb-2 text-sm font-medium uppercase tracking-widest text-blue-400">
             Administração
@@ -233,7 +246,7 @@ export default function ClientesPage() {
           </div>
         )}
 
-        {erro && !modalAberto && (
+        {erro && !modalAberto && !confirmacao && (
           <div className="mb-5 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">
             {erro}
           </div>
@@ -245,8 +258,10 @@ export default function ClientesPage() {
               <h2 className="text-lg font-semibold">Clientes cadastrados</h2>
               {!carregando && (
                 <p className="mt-1 text-sm text-slate-400">
-                  {clientes.length}{" "}
-                  {clientes.length === 1 ? "cliente encontrado" : "clientes encontrados"}
+                  {clientesFiltrados.length}{" "}
+                  {clientesFiltrados.length === 1
+                    ? "cliente encontrado"
+                    : "clientes encontrados"}
                 </p>
               )}
             </div>
@@ -259,15 +274,46 @@ export default function ClientesPage() {
             </button>
           </div>
 
+          <div className="border-b border-blue-900/40 px-5 py-4 sm:px-6">
+            <div className="relative w-full sm:max-w-md">
+              <input
+                type="search"
+                value={busca}
+                onChange={(event) => setBusca(event.target.value)}
+                placeholder="Buscar cliente por nome ou e-mail..."
+                aria-label="Buscar clientes"
+                className="
+        w-full rounded-xl
+        border border-blue-400/20
+        bg-[#020b24]
+        px-4 py-3
+        text-sm text-white
+        outline-none
+        transition
+        placeholder:text-slate-500
+        hover:border-blue-400/40
+        focus:border-blue-500
+      "
+              />
+            </div>
+          </div>
+
           {carregando ? (
             <div className="px-6 py-12 text-center text-slate-400">
               Carregando clientes...
             </div>
-          ) : clientes.length === 0 ? (
+          ) : clientesFiltrados.length === 0 ? (
             <div className="px-6 py-12 text-center">
-              <p className="text-slate-300">Nenhum cliente cadastrado.</p>
+              <p className="text-slate-300">
+                {busca.trim()
+                  ? "Nenhum cliente encontrado."
+                  : "Nenhum cliente cadastrado."}
+              </p>
+
               <p className="mt-2 text-sm text-slate-500">
-                Utilize o botão acima para cadastrar o primeiro cliente.
+                {busca.trim()
+                  ? "Tente pesquisar por outro nome ou e-mail."
+                  : "Utilize o botão acima para cadastrar o primeiro cliente."}
               </p>
             </div>
           ) : (
@@ -284,10 +330,14 @@ export default function ClientesPage() {
                   </thead>
 
                   <tbody className="divide-y divide-blue-900/40">
-                    {clientes.map((cliente) => (
+                    {clientesFiltrados.map((cliente) => (
                       <tr key={cliente.id} className="hover:bg-blue-950/40">
-                        <td className="px-6 py-4 font-medium">{cliente.nome}</td>
-                        <td className="px-6 py-4 text-slate-300">{cliente.email}</td>
+                        <td className="px-6 py-4 font-medium">
+                          {cliente.nome}
+                        </td>
+                        <td className="px-6 py-4 text-slate-300">
+                          {cliente.email}
+                        </td>
                         <td className="px-6 py-4">
                           <span className="rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-xs text-blue-300">
                             Cliente
@@ -302,11 +352,16 @@ export default function ClientesPage() {
                               Editar
                             </button>
                             <button
-                              onClick={() => excluirCliente(cliente)}
+                              onClick={() => {
+                                setErro("");
+                                setConfirmacao(cliente);
+                              }}
                               disabled={excluindoId === cliente.id}
                               className="text-sm font-medium text-red-400 hover:text-red-300 disabled:opacity-50 cursor-pointer"
                             >
-                              {excluindoId === cliente.id ? "Excluindo..." : "Excluir"}
+                              {excluindoId === cliente.id
+                                ? "Excluindo..."
+                                : "Excluir"}
                             </button>
                           </div>
                         </td>
@@ -317,7 +372,7 @@ export default function ClientesPage() {
               </div>
 
               <div className="space-y-3 p-4 md:hidden">
-                {clientes.map((cliente) => (
+                {clientesFiltrados.map((cliente) => (
                   <article
                     key={cliente.id}
                     className="rounded-xl border border-blue-900/50 bg-[#091a38] p-4"
@@ -337,11 +392,16 @@ export default function ClientesPage() {
                         Editar
                       </button>
                       <button
-                        onClick={() => excluirCliente(cliente)}
+                        onClick={() => {
+                          setErro("");
+                          setConfirmacao(cliente);
+                        }}
                         disabled={excluindoId === cliente.id}
                         className="text-sm text-red-400 disabled:opacity-50 "
                       >
-                        {excluindoId === cliente.id ? "Excluindo..." : "Excluir"}
+                        {excluindoId === cliente.id
+                          ? "Excluindo..."
+                          : "Excluir"}
                       </button>
                     </div>
                   </article>
@@ -350,6 +410,10 @@ export default function ClientesPage() {
             </>
           )}
         </section>
+        <footer className="mt-8 flex flex-col items-center justify-center gap-2 border-t border-blue-400/10 py-6 text-center text-xs text-slate-500">
+          <p>Monitoramento inteligente de água</p>
+          <p>Projeto de TCC · 2026</p>
+        </footer>
       </div>
 
       {modalAberto && (
@@ -372,7 +436,10 @@ export default function ClientesPage() {
 
             <form onSubmit={salvarCliente} className="space-y-5">
               <div>
-                <label htmlFor="nome" className="mb-2 block text-sm text-slate-300">
+                <label
+                  htmlFor="nome"
+                  className="mb-2 block text-sm text-slate-300"
+                >
                   Nome completo
                 </label>
                 <input
@@ -388,7 +455,10 @@ export default function ClientesPage() {
               </div>
 
               <div>
-                <label htmlFor="email" className="mb-2 block text-sm text-slate-300">
+                <label
+                  htmlFor="email"
+                  className="mb-2 block text-sm text-slate-300"
+                >
                   E-mail
                 </label>
                 <input
@@ -405,7 +475,10 @@ export default function ClientesPage() {
               </div>
 
               <div>
-                <label htmlFor="senha" className="mb-2 block text-sm text-slate-300">
+                <label
+                  htmlFor="senha"
+                  className="mb-2 block text-sm text-slate-300"
+                >
                   Senha {clienteEditando ? "(opcional)" : ""}
                 </label>
                 <input
@@ -415,7 +488,9 @@ export default function ClientesPage() {
                   onChange={(e) => setSenha(e.target.value)}
                   required={!clienteEditando}
                   minLength={6}
-                  autoComplete={clienteEditando ? "new-password" : "new-password"}
+                  autoComplete={
+                    clienteEditando ? "new-password" : "new-password"
+                  }
                   className="w-full rounded-lg border border-blue-900 bg-[#020b24] px-4 py-3 text-white outline-none focus:border-blue-500"
                   placeholder={
                     clienteEditando
@@ -457,6 +532,62 @@ export default function ClientesPage() {
                 </button>
               </div>
             </form>
+          </section>
+        </div>
+      )}
+
+      {confirmacao && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="titulo-confirmacao-cliente"
+            className="w-full max-w-md rounded-2xl border border-white/10 bg-[#07132e] p-6 shadow-2xl"
+          >
+            <h2
+              id="titulo-confirmacao-cliente"
+              className="text-xl font-bold text-white"
+            >
+              Excluir cliente?
+            </h2>
+
+            <p className="mt-3 text-sm leading-6 text-slate-400">
+              Você está prestes a excluir o cliente{" "}
+              <strong className="text-white">{confirmacao.nome}</strong>. Essa
+              ação não poderá ser desfeita.
+            </p>
+
+            {erro && (
+              <div
+                role="alert"
+                className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300"
+              >
+                {erro}
+              </div>
+            )}
+
+            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setConfirmacao(null);
+                  setErro("");
+                }}
+                disabled={excluindoId !== null}
+                className="cursor-pointer rounded-xl border border-white/10 px-4 py-3 text-sm text-slate-300 transition hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={excluirCliente}
+                disabled={excluindoId !== null}
+                className="cursor-pointer rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {excluindoId !== null ? "Excluindo..." : "Confirmar exclusão"}
+              </button>
+            </div>
           </section>
         </div>
       )}

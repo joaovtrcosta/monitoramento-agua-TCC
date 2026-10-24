@@ -1,6 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Usuario {
   id: string;
@@ -17,6 +24,13 @@ interface Residencia {
 }
 
 const API_URL = "http://localhost:8080/api";
+
+const estiloOpcao =
+  "cursor-pointer text-slate-200 " +
+  "hover:!bg-blue-500/20 hover:!text-white " +
+  "focus:!bg-blue-500/20 focus:!text-white " +
+  "data-[highlighted]:!bg-blue-500/20 " +
+  "data-[highlighted]:!text-white";
 
 export default function ResidenciasPage() {
   const [clientes, setClientes] = useState<Usuario[]>([]);
@@ -36,6 +50,7 @@ export default function ResidenciasPage() {
 
   const [salvando, setSalvando] = useState(false);
   const [excluindoId, setExcluindoId] = useState<string | null>(null);
+  const [confirmacao, setConfirmacao] = useState<Residencia | null>(null);
   const [filtroCliente, setFiltroCliente] = useState("TODOS");
 
   const carregarDados = useCallback(async () => {
@@ -199,12 +214,10 @@ export default function ResidenciasPage() {
     }
   }
 
-  async function excluirResidencia(residencia: Residencia) {
-    const confirmou = window.confirm(
-      `Deseja realmente excluir a residência "${residencia.nome}" de ${residencia.usuario.nome}?`,
-    );
+  async function excluirResidencia() {
+    if (!confirmacao || excluindoId) return;
 
-    if (!confirmou) return;
+    const residencia = confirmacao;
 
     setErro("");
     setSucesso("");
@@ -233,8 +246,9 @@ export default function ResidenciasPage() {
         );
       }
 
-      setSucesso("Residência excluída com sucesso.");
+      setConfirmacao(null);
       await carregarDados();
+      setSucesso("Residência excluída com sucesso.");
     } catch (error) {
       setErro(
         error instanceof Error
@@ -311,20 +325,61 @@ export default function ResidenciasPage() {
               Filtrar por cliente:
             </label>
 
-            <select
-              id="filtro-cliente"
+            <Select
               value={filtroCliente}
-              onChange={(event) => setFiltroCliente(event.target.value)}
-              className="rounded-lg border border-blue-900 bg-[#020b24] px-3 py-2 text-sm text-white outline-none focus:border-blue-500 sm:max-w-sm"
+              onValueChange={(valor) => {
+                if (valor !== null) {
+                  setFiltroCliente(valor);
+                }
+              }}
             >
-              <option value="TODOS">Todos os clientes</option>
+              <SelectTrigger
+                id="filtro-cliente"
+                className="
+      h-12! w-full cursor-pointer
+      rounded-xl border border-blue-400/20
+      bg-[#020b24] px-4 text-sm text-slate-100
+      shadow-none
+      hover:border-blue-400/40
+      focus-visible:border-blue-400
+      sm:w-72
+    "
+              >
+                <SelectValue>
+                  {filtroCliente === "TODOS"
+                    ? "Todos os clientes"
+                    : (clientes.find((cliente) => cliente.id === filtroCliente)
+                        ?.nome ?? "Selecione um cliente")}
+                </SelectValue>
+              </SelectTrigger>
 
-              {clientes.map((cliente) => (
-                <option key={cliente.id} value={cliente.id}>
-                  {cliente.nome}
-                </option>
-              ))}
-            </select>
+              <SelectContent
+                align="start"
+                side="bottom"
+                sideOffset={6}
+                alignItemWithTrigger={false}
+                className="
+      max-h-60 rounded-xl
+      border border-blue-400/20
+      bg-[#07142f] p-1 text-slate-100
+      shadow-xl shadow-black/40
+    "
+              >
+                <SelectItem value="TODOS" className={estiloOpcao}>
+                  Todos os clientes
+                </SelectItem>
+
+                {clientes.map((cliente) => (
+                  <SelectItem
+                    key={cliente.id}
+                    value={cliente.id}
+                    className={estiloOpcao}
+                  >
+                    {cliente.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {carregando ? (
@@ -349,7 +404,18 @@ export default function ResidenciasPage() {
             </div>
           ) : (
             <>
-              <div className="hidden overflow-x-auto md:block">
+              <div
+                className="
+    hidden overflow-x-auto md:block
+    scrollbar-thin
+    [scrollbar-color:#3b82f6_#07142f]
+    [&::-webkit-scrollbar]:h-1.5
+    [&::-webkit-scrollbar-track]:bg-[#07142f]
+    [&::-webkit-scrollbar-thumb]:rounded-full
+    [&::-webkit-scrollbar-thumb]:bg-blue-500
+    [&::-webkit-scrollbar-thumb:hover]:bg-blue-400
+  "
+              >
                 <table className="w-full text-left">
                   <thead className="bg-[#0b1c3b] text-sm text-slate-400">
                     <tr>
@@ -391,7 +457,10 @@ export default function ResidenciasPage() {
                             </button>
 
                             <button
-                              onClick={() => excluirResidencia(residencia)}
+                              onClick={() => {
+                                setErro("");
+                                setConfirmacao(residencia);
+                              }}
                               disabled={excluindoId === residencia.id}
                               className="text-sm font-medium text-red-400 hover:text-red-300 disabled:opacity-50 cursor-pointer"
                             >
@@ -440,7 +509,10 @@ export default function ResidenciasPage() {
                       </button>
 
                       <button
-                        onClick={() => excluirResidencia(residencia)}
+                        onClick={() => {
+                          setErro("");
+                          setConfirmacao(residencia);
+                        }}
                         disabled={excluindoId === residencia.id}
                         className="text-sm text-red-400 disabled:opacity-50 cursor-pointer"
                       >
@@ -455,6 +527,10 @@ export default function ResidenciasPage() {
             </>
           )}
         </section>
+        <footer className="mt-8 flex flex-col items-center justify-center gap-2 border-t border-blue-400/10 py-6 text-center text-xs text-slate-500">
+          <p>Monitoramento inteligente de água</p>
+          <p>Projeto de TCC · 2026</p>
+        </footer>
       </div>
 
       {modalAberto && (
@@ -522,24 +598,64 @@ export default function ResidenciasPage() {
                   Cliente responsável
                 </label>
 
-                <select
-                  id="cliente"
-                  value={usuarioId}
-                  onChange={(event) => setUsuarioId(event.target.value)}
-                  required
+                <Select
+                  value={usuarioId || null}
                   disabled={Boolean(residenciaEditando)}
-                  className="w-full rounded-lg border border-blue-900 bg-[#020b24] px-4 py-3 text-white outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-70"
+                  onValueChange={(valor) => {
+                    setUsuarioId(valor ?? "");
+                  }}
                 >
-                  <option value="" disabled>
-                    Selecione um cliente
-                  </option>
+                  <SelectTrigger
+                    id="cliente"
+                    className="
+      h-12! w-full cursor-pointer
+      rounded-xl border border-blue-400/20
+      bg-[#020b24] px-4 text-sm text-slate-100
+      shadow-none
+      hover:border-blue-400/40
+      focus-visible:border-blue-400
+      disabled:cursor-not-allowed
+      disabled:opacity-70
+    "
+                  >
+                    <SelectValue>
+                      {usuarioId
+                        ? (() => {
+                            const cliente = clientes.find(
+                              (item) => item.id === usuarioId,
+                            );
 
-                  {clientes.map((cliente) => (
-                    <option key={cliente.id} value={cliente.id}>
-                      {cliente.nome} — {cliente.email}
-                    </option>
-                  ))}
-                </select>
+                            return cliente
+                              ? `${cliente.nome} — ${cliente.email}`
+                              : "Selecione um cliente";
+                          })()
+                        : "Selecione um cliente"}
+                    </SelectValue>
+                  </SelectTrigger>
+
+                  <SelectContent
+                    align="start"
+                    side="bottom"
+                    sideOffset={6}
+                    alignItemWithTrigger={false}
+                    className="
+      max-h-60 rounded-xl
+      border border-blue-400/20
+      bg-[#07142f] p-1 text-slate-100
+      shadow-xl shadow-black/40
+    "
+                  >
+                    {clientes.map((cliente) => (
+                      <SelectItem
+                        key={cliente.id}
+                        value={cliente.id}
+                        className={estiloOpcao}
+                      >
+                        {cliente.nome} — {cliente.email}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
                 {residenciaEditando && (
                   <p className="mt-2 text-xs text-slate-500">
@@ -580,6 +696,64 @@ export default function ResidenciasPage() {
                 </button>
               </div>
             </form>
+          </section>
+        </div>
+      )}
+
+      {confirmacao && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="titulo-confirmacao"
+            className="w-full max-w-md rounded-2xl border border-white/10 bg-[#07132e] p-6 shadow-2xl"
+          >
+            <h2
+              id="titulo-confirmacao"
+              className="text-xl font-bold text-white"
+            >
+              Excluir residência?
+            </h2>
+
+            <p className="mt-3 text-sm leading-6 text-slate-400">
+              Você está prestes a excluir a residência{" "}
+              <strong className="text-white">{confirmacao.nome}</strong>,
+              vinculada ao cliente{" "}
+              <strong className="text-white">{confirmacao.usuario.nome}</strong>
+              . Essa ação não poderá ser desfeita.
+            </p>
+
+            {erro && (
+              <div
+                role="alert"
+                className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300"
+              >
+                {erro}
+              </div>
+            )}
+
+            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setConfirmacao(null);
+                  setErro("");
+                }}
+                disabled={excluindoId !== null}
+                className="cursor-pointer rounded-xl border border-white/10 px-4 py-3 text-sm text-slate-300 transition hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={excluirResidencia}
+                disabled={excluindoId !== null}
+                className="cursor-pointer rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {excluindoId !== null ? "Excluindo..." : "Confirmar exclusão"}
+              </button>
+            </div>
           </section>
         </div>
       )}

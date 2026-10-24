@@ -1,7 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { CalendarDays, Check, Search } from "lucide-react";
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export type TipoRelatorio = "mes" | "varios" | "todos" | "periodo";
 
@@ -39,6 +47,115 @@ const nomesMeses = [
 const anoAtual = new Date().getFullYear();
 
 const anosDisponiveis = Array.from({ length: 11 }, (_, i) => anoAtual - 5 + i);
+
+const opcoesTipo: {
+  value: TipoRelatorio;
+  label: string;
+}[] = [
+  { value: "mes", label: "Um único mês" },
+  { value: "varios", label: "Vários meses selecionados" },
+  { value: "todos", label: "Todos os meses do ano" },
+  { value: "periodo", label: "Período personalizado" },
+];
+
+const classeLabel = "mb-2 block text-sm font-medium text-slate-300";
+
+const classeTrigger =
+  "h-14! w-full min-w-0 rounded-xl " +
+  "border border-blue-400/20 bg-[#030d29] " +
+  "px-4 text-sm text-slate-100 shadow-none " +
+  "outline-none transition-colors " +
+  "hover:border-blue-400/40 " +
+  "focus-visible:border-blue-400/60 " +
+  "focus-visible:ring-2 focus-visible:ring-blue-500/20 " +
+  "data-[popup-open]:border-blue-400/60 " +
+  "[&_svg]:text-blue-300";
+
+const classeContent =
+  "z-[100] max-h-64 rounded-xl " +
+  "border border-blue-400/20 bg-[#07142f] " +
+  "text-slate-100 shadow-xl shadow-black/40";
+
+const classeItem =
+  "cursor-pointer rounded-lg px-3 py-2.5 " +
+  "text-sm text-slate-200 outline-none " +
+  "transition-colors " +
+  "data-[highlighted]:bg-blue-600/20 " +
+  "data-[highlighted]:text-white " +
+  "data-[selected]:bg-blue-600/15 " +
+  "data-[selected]:text-blue-200";
+type Opcao = {
+  value: string;
+  label: string;
+};
+
+interface CampoSelectProps {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: Opcao[];
+}
+
+function CampoSelect({
+  id,
+  label,
+  value,
+  onChange,
+  options,
+}: CampoSelectProps) {
+  return (
+    <div className="min-w-0">
+      <label htmlFor={id} className={classeLabel}>
+        {label}
+      </label>
+
+      <Select
+        value={value}
+        onValueChange={(novoValor) => {
+          if (novoValor !== null) {
+            onChange(novoValor);
+          }
+        }}
+      >
+        <SelectTrigger id={id} className={classeTrigger} aria-label={label}>
+          <SelectValue>
+            {options.find((option) => option.value === value)?.label ??
+              "Selecione uma opção"}
+          </SelectValue>
+        </SelectTrigger>
+
+        <SelectContent
+          align="start"
+          side="bottom"
+          sideOffset={5}
+          alignItemWithTrigger={false}
+          className={classeContent}
+        >
+          {options.map((option) => (
+            <SelectItem
+              key={option.value}
+              value={option.value}
+              className={classeItem}
+            >
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+const opcoesMeses = nomesMeses.map((nome, index) => ({
+  value: String(index + 1),
+  label: nome,
+}));
+
+const opcoesAnos = anosDisponiveis.map((ano) => ({
+  value: String(ano),
+  label: String(ano),
+}));
 
 export default function FiltroRelatorio({
   onConsultar,
@@ -95,110 +212,56 @@ export default function FiltroRelatorio({
     });
   }
 
-  const classeCampo =
-    "w-full appearance-none rounded-xl border border-blue-400/15 bg-[#030d29] px-4 py-3 pr-12 text-sm text-white outline-none transition focus:border-blue-400/50 focus:ring-2 focus:ring-blue-500/20";
-
-  const classeLabel = "mb-2 block text-sm font-medium text-slate-300";
-
   return (
-    <section className="space-y-5 rounded-2xl border border-blue-400/10 bg-blue-950/20 p-5 sm:p-6">
+    <section className="space-y-6 rounded-2xl border border-blue-400/10 bg-blue-950/20 p-5 sm:p-6">
       <div>
-        <h2 className="text-xl font-semibold text-white">
-          Gerar relatório de consumo
-        </h2>
+        <div className="flex items-center gap-2">
+          <CalendarDays className="h-5 w-5 text-blue-400" />
 
-        <p className="mt-1 text-sm text-slate-400">
+          <h2 className="text-xl font-semibold text-white">
+            Gerar relatório de consumo
+          </h2>
+        </div>
+
+        <p className="mt-2 text-sm text-slate-400">
           Selecione o período que deseja consultar.
         </p>
       </div>
 
-      {/* Tipo de relatório e ano */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div>
-          <label htmlFor="tipo-relatorio" className={classeLabel}>
-            Tipo de relatório
-          </label>
-
-          <div className="relative">
-            <select
-              id="tipo-relatorio"
-              value={tipo}
-              onChange={(e) => setTipo(e.target.value as TipoRelatorio)}
-              className={classeCampo}
-            >
-              <option value="mes">Um único mês</option>
-              <option value="varios">Vários meses selecionados</option>
-              <option value="todos">Todos os meses do ano</option>
-              <option value="periodo">Período personalizado</option>
-            </select>
-
-            <ChevronDown
-              size={18}
-              className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
-            />
-          </div>
-        </div>
+        <CampoSelect
+          id="tipo-relatorio"
+          label="Tipo de relatório"
+          value={tipo}
+          onChange={(value) => setTipo(value as TipoRelatorio)}
+          options={opcoesTipo}
+        />
 
         {(tipo === "todos" || tipo === "mes" || tipo === "varios") && (
-          <div>
-            <label htmlFor="ano-relatorio" className={classeLabel}>
-              Ano
-            </label>
-
-            <div className="relative">
-              <select
-                id="ano-relatorio"
-                value={ano}
-                onChange={(e) => setAno(Number(e.target.value))}
-                className={classeCampo}
-              >
-                {anosDisponiveis.map((anoOpcao) => (
-                  <option key={anoOpcao} value={anoOpcao}>
-                    {anoOpcao}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown
-                size={18}
-                className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
-              />
-            </div>
-          </div>
+          <CampoSelect
+            id="ano-relatorio"
+            label="Ano"
+            value={String(ano)}
+            onChange={(value) => setAno(Number(value))}
+            options={opcoesAnos}
+          />
         )}
       </div>
 
-      {/* Seleção de um único mês */}
       {tipo === "mes" && (
-        <div>
-          <label htmlFor="mes-relatorio" className={classeLabel}>
-            Mês
-          </label>
-
-          <div className="relative">
-            <select
-              id="mes-relatorio"
-              value={mes}
-              onChange={(e) => setMes(Number(e.target.value))}
-              className={classeCampo}
-            >
-              {nomesMeses.map((nome, i) => (
-                <option key={nome} value={i + 1}>
-                  {nome}
-                </option>
-              ))}
-            </select>
-
-            <ChevronDown
-              size={18}
-              className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
-            />
-          </div>
+        <div className="max-w-md">
+          <CampoSelect
+            id="mes-relatorio"
+            label="Mês"
+            value={String(mes)}
+            onChange={(value) => setMes(Number(value))}
+            options={opcoesMeses}
+          />
         </div>
       )}
 
-      {/* Seleção de vários meses */}
       {tipo === "varios" && (
-        <fieldset>
+        <fieldset className="space-y-3">
           <legend className="mb-3 text-sm font-medium text-slate-300">
             Selecione os meses desejados
           </legend>
@@ -211,20 +274,36 @@ export default function FiltroRelatorio({
               return (
                 <label
                   key={nome}
-                  className={`flex cursor-pointer items-center gap-2 rounded-xl border p-3 text-sm transition ${
-                    selecionado
-                      ? "border-blue-400/40 bg-blue-500/10 text-blue-200"
-                      : "border-blue-400/10 bg-[#030d29]/60 text-slate-300 hover:border-blue-400/30 hover:bg-blue-500/5"
-                  }`}
+                  className={
+                    "flex cursor-pointer items-center justify-between " +
+                    "gap-2 rounded-xl border p-3 text-sm " +
+                    "transition-all duration-200 " +
+                    (selecionado
+                      ? "border-blue-400/50 bg-blue-500/15 text-blue-100 shadow-sm shadow-blue-500/10"
+                      : "border-blue-400/10 bg-[#030d29]/60 text-slate-300 hover:border-blue-400/30 hover:bg-blue-500/5")
+                  }
                 >
-                  <input
-                    type="checkbox"
-                    checked={selecionado}
-                    onChange={() => alternarMes(numeroMes)}
-                    className="h-4 w-4 accent-blue-500"
-                  />
+                  <span className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={selecionado}
+                      onChange={() => alternarMes(numeroMes)}
+                      className="sr-only"
+                    />
 
-                  {nome}
+                    <span>{nome}</span>
+                  </span>
+
+                  <span
+                    className={
+                      "flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition " +
+                      (selecionado
+                        ? "border-blue-500 bg-blue-600 text-white"
+                        : "border-slate-600 bg-[#07142f]")
+                    }
+                  >
+                    {selecionado && <Check className="h-3.5 w-3.5" />}
+                  </span>
                 </label>
               );
             })}
@@ -232,124 +311,57 @@ export default function FiltroRelatorio({
         </fieldset>
       )}
 
-      {/* Seleção de período personalizado */}
       {tipo === "periodo" && (
         <div className="space-y-4">
           <p className="text-sm text-slate-400">
             Escolha o mês e o ano de início e de término.
           </p>
 
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-4 rounded-xl border border-blue-400/10 bg-[#030d29]/50 p-4">
-              <h3 className="font-semibold text-white">Data inicial</h3>
+              <h3 className="flex items-center gap-2 font-semibold text-white">
+                <span className="h-2 w-2 rounded-full bg-blue-400" />
+                Data inicial
+              </h3>
 
-              <div>
-                <label htmlFor="mes-inicial" className={classeLabel}>
-                  Mês inicial
-                </label>
+              <CampoSelect
+                id="mes-inicial"
+                label="Mês inicial"
+                value={String(mesInicial)}
+                onChange={(value) => setMesInicial(Number(value))}
+                options={opcoesMeses}
+              />
 
-                <div className="relative">
-                  <select
-                    id="mes-inicial"
-                    value={mesInicial}
-                    onChange={(e) => setMesInicial(Number(e.target.value))}
-                    className={classeCampo}
-                  >
-                    {nomesMeses.map((nome, i) => (
-                      <option key={nome} value={i + 1}>
-                        {nome}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown
-                    size={18}
-                    className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="ano-inicial" className={classeLabel}>
-                  Ano inicial
-                </label>
-
-                <div className="relative">
-                  <select
-                    id="ano-inicial"
-                    value={anoInicial}
-                    onChange={(e) => setAnoInicial(Number(e.target.value))}
-                    className={classeCampo}
-                  >
-                    {anosDisponiveis.map((anoOpcao) => (
-                      <option key={anoOpcao} value={anoOpcao}>
-                        {anoOpcao}
-                      </option>
-                    ))}
-                  </select>
-
-                  <ChevronDown
-                    size={18}
-                    className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
-                  />
-                </div>
-              </div>
+              <CampoSelect
+                id="ano-inicial"
+                label="Ano inicial"
+                value={String(anoInicial)}
+                onChange={(value) => setAnoInicial(Number(value))}
+                options={opcoesAnos}
+              />
             </div>
 
             <div className="space-y-4 rounded-xl border border-blue-400/10 bg-[#030d29]/50 p-4">
-              <h3 className="font-semibold text-white">Data final</h3>
+              <h3 className="flex items-center gap-2 font-semibold text-white">
+                <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                Data final
+              </h3>
 
-              <div>
-                <label htmlFor="mes-final" className={classeLabel}>
-                  Mês final
-                </label>
+              <CampoSelect
+                id="mes-final"
+                label="Mês final"
+                value={String(mesFinal)}
+                onChange={(value) => setMesFinal(Number(value))}
+                options={opcoesMeses}
+              />
 
-                <div className="relative">
-                  <select
-                    id="mes-final"
-                    value={mesFinal}
-                    onChange={(e) => setMesFinal(Number(e.target.value))}
-                    className={classeCampo}
-                  >
-                    {nomesMeses.map((nome, i) => (
-                      <option key={nome} value={i + 1}>
-                        {nome}
-                      </option>
-                    ))}
-                  </select>
-
-                  <ChevronDown
-                    size={18}
-                    className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="ano-final" className={classeLabel}>
-                  Ano final
-                </label>
-
-                <div className="relative">
-                  <select
-                    id="ano-final"
-                    value={anoFinal}
-                    onChange={(e) => setAnoFinal(Number(e.target.value))}
-                    className={classeCampo}
-                  >
-                    {anosDisponiveis.map((anoOpcao) => (
-                      <option key={anoOpcao} value={anoOpcao}>
-                        {anoOpcao}
-                      </option>
-                    ))}
-                  </select>
-
-                  <ChevronDown
-                    size={18}
-                    className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
-                  />
-                </div>
-              </div>
+              <CampoSelect
+                id="ano-final"
+                label="Ano final"
+                value={String(anoFinal)}
+                onChange={(value) => setAnoFinal(Number(value))}
+                options={opcoesAnos}
+              />
             </div>
           </div>
         </div>
@@ -359,8 +371,10 @@ export default function FiltroRelatorio({
         type="button"
         onClick={consultar}
         disabled={carregando}
-        className="w-full rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/15 transition-all duration-200 hover:bg-blue-500 hover:shadow-blue-500/25 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
       >
+        <Search className="h-4 w-4" />
+
         {carregando ? "Consultando..." : "Consultar relatório"}
       </button>
     </section>

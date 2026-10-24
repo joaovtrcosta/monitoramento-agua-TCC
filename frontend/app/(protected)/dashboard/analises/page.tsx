@@ -508,6 +508,11 @@ export default function AnalisesPage() {
           </section>
         </>
       )}
+
+      <footer className="mt-8 flex flex-col items-center justify-center gap-2 border-t border-blue-400/10 py-6 text-center text-xs text-slate-500">
+        <p>Monitoramento inteligente de água</p>
+        <p>Projeto de TCC · 2026</p>
+      </footer>
     </div>
   );
 }
