@@ -1,4 +1,3 @@
-
 package com.tcc.backend.service;
 
 import com.tcc.backend.dto.ConsumoDiarioDTO;
@@ -42,6 +41,14 @@ public class MedicaoService {
         }
 
         public Medicao salvar(MedicaoDTO dto) {
+                return salvarComOrigem(dto, "REAL");
+        }
+
+        public Medicao salvarSimulada(MedicaoDTO dto) {
+                return salvarComOrigem(dto, "SIMULADO");
+        }
+
+        private Medicao salvarComOrigem(MedicaoDTO dto, String origem) {
 
                 if (dto == null
                                 || dto.getDeviceId() == null
@@ -73,7 +80,16 @@ public class MedicaoService {
                 Optional<Medicao> medicaoExistente = medicaoRepository.findByMedicaoId(dto.getMedicaoId());
 
                 if (medicaoExistente.isPresent()) {
-                        return medicaoExistente.get();
+
+                        Medicao existente = medicaoExistente.get();
+
+                        if (!existente.getDispositivo().getId()
+                                        .equals(dispositivo.getId())) {
+                                throw new IllegalArgumentException(
+                                                "Identificador de medição já utilizado por outro dispositivo.");
+                        }
+
+                        return existente;
                 }
 
                 Medicao medicao = new Medicao();
@@ -84,13 +100,36 @@ public class MedicaoService {
                 medicao.setVolumeLitros(dto.getVolumeLitros());
                 medicao.setDispositivo(dispositivo);
 
+                // Define a origem da medição
+                medicao.setOrigem(origem);
+
                 return medicaoRepository.save(medicao);
         }
 
         public List<Medicao> listarPorUsuario(String email) {
 
                 return medicaoRepository
-                                .findByDispositivo_Residencia_Usuario_Email(email);
+                                .findByDispositivo_Residencia_Usuario_EmailAndOrigem(
+                                                email,
+                                                "REAL");
+        }
+
+        public List<Medicao> listarMedicoesReais(String email) {
+
+                return medicaoRepository
+                                .findByDispositivo_Residencia_Usuario_EmailAndOrigem(
+                                                email,
+                                                "REAL");
+        }
+
+        public List<Medicao> listarMedicoesRecentes(
+                        String email,
+                        LocalDateTime inicio) {
+
+                return medicaoRepository
+                                .findTop100ByDispositivo_Residencia_Usuario_EmailAndDataHoraGreaterThanEqualOrderByDataHoraAsc(
+                                                email,
+                                                inicio);
         }
 
         // Lista as medições de um dia específico para o usuário.
@@ -107,10 +146,11 @@ public class MedicaoService {
                 LocalDateTime fim = data.plusDays(1).atStartOfDay();
 
                 return medicaoRepository
-                                .findByDispositivo_Residencia_Usuario_EmailAndDataHoraGreaterThanEqualAndDataHoraLessThan(
+                                .findByDispositivo_Residencia_Usuario_EmailAndDataHoraGreaterThanEqualAndDataHoraLessThanAndOrigem(
                                                 email,
                                                 inicio,
-                                                fim);
+                                                fim,
+                                                "REAL");
         }
 
         public BigDecimal somarVolumeEntre(
@@ -118,7 +158,7 @@ public class MedicaoService {
                         LocalDateTime fim,
                         String email) {
 
-                return medicaoRepository.somarVolumeEntreUsuario(
+                return medicaoRepository.somarVolumeRealEntreUsuario(
                                 inicio,
                                 fim,
                                 email);
@@ -138,12 +178,12 @@ public class MedicaoService {
                                 .atStartOfDay();
 
                 boolean possuiMedicoes = medicaoRepository
-                                .existsByDispositivo_Residencia_Usuario_EmailAndDataHoraGreaterThanEqualAndDataHoraLessThan(
-                                                email,
+                                .existeMedicaoRealNoPeriodo(
                                                 inicio,
-                                                fim);
+                                                fim,
+                                                email);
 
-                BigDecimal consumoLitros = medicaoRepository.somarVolumeEntreUsuario(
+                BigDecimal consumoLitros = medicaoRepository.somarVolumeRealEntreUsuario(
                                 inicio,
                                 fim,
                                 email);
@@ -200,10 +240,11 @@ public class MedicaoService {
                                 .atStartOfDay();
 
                 List<Medicao> medicoes = medicaoRepository
-                                .findByDispositivo_Residencia_Usuario_EmailAndDataHoraGreaterThanEqualAndDataHoraLessThan(
+                                .findByDispositivo_Residencia_Usuario_EmailAndDataHoraGreaterThanEqualAndDataHoraLessThanAndOrigem(
                                                 email,
                                                 inicio,
-                                                fim);
+                                                fim,
+                                                "REAL");
 
                 Map<LocalDate, BigDecimal> consumoPorDia = medicoes.stream()
                                 .collect(

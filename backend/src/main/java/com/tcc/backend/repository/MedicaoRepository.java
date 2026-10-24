@@ -1,4 +1,3 @@
-
 package com.tcc.backend.repository;
 
 import com.tcc.backend.entity.Medicao;
@@ -19,6 +18,10 @@ public interface MedicaoRepository extends JpaRepository<Medicao, UUID> {
 
         List<Medicao> findByDispositivo_Residencia_Usuario_Email(
                         String email);
+
+        List<Medicao> findTop100ByDispositivo_Residencia_Usuario_EmailAndDataHoraGreaterThanEqualOrderByDataHoraAsc(
+                        String email,
+                        LocalDateTime inicio);
 
         @Query("""
                         SELECT COALESCE(SUM(m.volumeLitros), 0)
@@ -47,9 +50,44 @@ public interface MedicaoRepository extends JpaRepository<Medicao, UUID> {
                         @Param("fim") LocalDateTime fim,
                         @Param("email") String email);
 
-        // Verifica se existem medições do usuário no período informado.
         boolean existsByDispositivo_Residencia_Usuario_EmailAndDataHoraGreaterThanEqualAndDataHoraLessThan(
                         String email,
                         LocalDateTime inicio,
                         LocalDateTime fim);
+
+        List<Medicao> findByDispositivo_Residencia_Usuario_EmailAndOrigem(
+                        String email,
+                        String origem);
+
+        List<Medicao> findByDispositivo_Residencia_Usuario_EmailAndDataHoraGreaterThanEqualAndDataHoraLessThanAndOrigem(
+                        String email,
+                        LocalDateTime inicio,
+                        LocalDateTime fim,
+                        String origem);
+
+        @Query("""
+                        SELECT COALESCE(SUM(m.volumeLitros), 0)
+                        FROM Medicao m
+                        WHERE m.dataHora >= :inicio
+                        AND m.dataHora < :fim
+                        AND m.dispositivo.residencia.usuario.email = :email
+                        AND m.origem = 'REAL'
+                        """)
+        BigDecimal somarVolumeRealEntreUsuario(
+                        @Param("inicio") LocalDateTime inicio,
+                        @Param("fim") LocalDateTime fim,
+                        @Param("email") String email);
+
+        @Query("""
+                        SELECT CASE WHEN COUNT(m) > 0 THEN true ELSE false END
+                        FROM Medicao m
+                        WHERE m.dataHora >= :inicio
+                        AND m.dataHora < :fim
+                        AND m.dispositivo.residencia.usuario.email = :email
+                        AND m.origem = 'REAL'
+                        """)
+        boolean existeMedicaoRealNoPeriodo(
+                        @Param("inicio") LocalDateTime inicio,
+                        @Param("fim") LocalDateTime fim,
+                        @Param("email") String email);
 }

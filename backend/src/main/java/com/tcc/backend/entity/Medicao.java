@@ -1,7 +1,6 @@
 package com.tcc.backend.entity;
 
 import jakarta.persistence.*;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -28,6 +27,9 @@ public class Medicao {
 
     @Column(precision = 10, scale = 2)
     private BigDecimal valorEstimado;
+
+    @Column(name = "origem", length = 20)
+    private String origem;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dispositivo_id", nullable = false)
@@ -82,6 +84,14 @@ public class Medicao {
 
     public void setValorEstimado(BigDecimal valorEstimado) {
         this.valorEstimado = valorEstimado;
+    }
+
+    public String getOrigem() {
+        return origem;
+    }
+
+    public void setOrigem(String origem) {
+        this.origem = origem;
     }
 
     public Dispositivo getDispositivo() {

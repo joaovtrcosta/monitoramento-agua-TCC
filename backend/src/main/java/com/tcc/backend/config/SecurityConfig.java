@@ -20,69 +20,74 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+        private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public SecurityConfig(
-            JwtAuthenticationFilter jwtAuthenticationFilter) {
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-    }
+        public SecurityConfig(
+                        JwtAuthenticationFilter jwtAuthenticationFilter) {
+                this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        }
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(
-            HttpSecurity http) throws Exception {
+        @Bean
+        public SecurityFilterChain securityFilterChain(
+                        HttpSecurity http) throws Exception {
 
-        http
-                .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
+                http
+                                .csrf(csrf -> csrf.disable())
+                                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .authorizeHttpRequests(auth -> auth
 
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        .requestMatchers("/api/auth/**").permitAll()
+                                                .requestMatchers("/api/auth/**").permitAll()
 
-                        .requestMatchers("/api/usuarios/**").hasRole("TECNICO")
+                                                .requestMatchers("/api/usuarios/**").hasRole("TECNICO")
 
-                        .requestMatchers("/api/residencias/**").hasRole("TECNICO")
+                                                .requestMatchers("/api/residencias/**").hasRole("TECNICO")
 
-                        .requestMatchers("/api/dispositivos/**").hasRole("TECNICO")
+                                                .requestMatchers("/api/dispositivos/**").hasRole("TECNICO")
 
-                        .requestMatchers(HttpMethod.POST, "/api/medicoes").permitAll()
+                                                .requestMatchers(HttpMethod.POST, "/api/medicoes").permitAll()
+                                                .requestMatchers(
+                                                                HttpMethod.POST,
+                                                                "/api/medicoes/simulada")
+                                                .hasRole("TECNICO")
 
-                        .anyRequest().authenticated())
-                .addFilterBefore(
-                        jwtAuthenticationFilter,
-                        UsernamePasswordAuthenticationFilter.class);
+                                                .anyRequest().authenticated())
+                                .addFilterBefore(
+                                                jwtAuthenticationFilter,
+                                                UsernamePasswordAuthenticationFilter.class);
 
-        return http.build();
-    }
+                return http.build();
+        }
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
+        @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
 
-        CorsConfiguration configuration = new CorsConfiguration();
+                CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(
-                List.of("http://localhost:3000"));
+                configuration.setAllowedOrigins(
+                                List.of("http://localhost:3000"));
 
-        configuration.setAllowedMethods(
-                List.of(
-                        "GET",
-                        "POST",
-                        "PUT",
-                        "PATCH",
-                        "DELETE",
-                        "OPTIONS"));
+                configuration.setAllowedMethods(
+                                List.of(
+                                                "GET",
+                                                "POST",
+                                                "PUT",
+                                                "PATCH",
+                                                "DELETE",
+                                                "OPTIONS"));
 
-        configuration.setAllowedHeaders(
-                List.of("Authorization", "Content-Type"));
+                configuration.setAllowedHeaders(
+                                List.of("Authorization", "Content-Type"));
 
-        configuration.setAllowCredentials(false);
+                configuration.setAllowCredentials(false);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
-        source.registerCorsConfiguration("/**", configuration);
+                source.registerCorsConfiguration("/**", configuration);
 
-        return source;
-    }
+                return source;
+        }
 }
