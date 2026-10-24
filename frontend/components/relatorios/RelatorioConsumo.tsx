@@ -58,17 +58,6 @@ export default function RelatorioConsumo() {
         throw new Error("Sua sessão expirou. Entre novamente no sistema.");
       }
 
-      /*
-       * Compatibilidade com os filtros atuais:
-       * - mês: consulta somente o mês escolhido;
-       * - vários: consulta os meses selecionados;
-       * - ano: consulta os 12 meses do ano escolhido.
-       *
-       * Para selecionar períodos entre anos diferentes,
-       * o FiltroRelatorio precisará fornecer os quatro campos
-       * de início e fim, conforme indicado abaixo.
-       */
-
       const filtrosComPeriodo = filtros as FiltrosRelatorio & {
         anoInicial?: number;
         mesInicial?: number;
@@ -221,7 +210,6 @@ export default function RelatorioConsumo() {
   return (
     <main className="min-h-screen bg-[#020b24] text-white">
       <div className="mx-auto max-w-375 p-5 sm:p-8">
-
         <section className="mb-8 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
           <div>
             <p className="mb-3 flex items-center gap-3 text-xs font-medium uppercase tracking-[0.18em] text-blue-400">
@@ -238,14 +226,6 @@ export default function RelatorioConsumo() {
               acompanhe os valores estimados de água e esgoto.
             </p>
           </div>
-
-          <a
-            href="/dashboard"
-            className="inline-flex w-fit shrink-0 items-center justify-center gap-2 rounded-xl border border-blue-400/20 bg-blue-500/10 px-4 py-3 text-sm font-medium text-blue-300 transition hover:border-blue-400/40 hover:bg-blue-500/20 hover:text-white"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Voltar ao dashboard
-          </a>
         </section>
 
         <section className="mb-6 rounded-2xl border border-blue-400/10 bg-blue-950/20 p-5 sm:p-6">
@@ -287,7 +267,6 @@ export default function RelatorioConsumo() {
 
         {dados.length > 0 && (
           <section className="space-y-6">
-
             <div className="grid gap-4 sm:grid-cols-2">
               <article className="rounded-2xl border border-blue-400/10 bg-blue-950/20 p-5 transition-all duration-300 hover:border-blue-400/25">
                 <div className="flex items-center justify-between gap-3">

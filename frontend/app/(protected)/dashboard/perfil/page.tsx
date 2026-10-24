@@ -206,15 +206,10 @@ export default function PerfilPage() {
   const campoClasse =
     "mt-2 w-full rounded-xl border border-blue-400/20 bg-[#061333] px-4 py-3 text-white outline-none transition placeholder:text-slate-500 focus:border-blue-400";
 
-  return (
-    <main className="min-h-screen bg-[#020b24] p-5 text-white sm:p-8">
-      <div className="mx-auto max-w-4xl">
-        <a
-          href="/dashboard"
-          className="text-sm text-blue-400 transition hover:text-blue-300"
-        >
-          ← Voltar ao dashboard
-        </a>
+ return (
+  <div className="text-white">
+    <div className="mx-auto max-w-4xl">
+        
 
         <h1 className="mt-6 text-3xl font-bold">Meu perfil</h1>
 
@@ -399,6 +394,6 @@ export default function PerfilPage() {
           </div>
         )}
       </div>
-    </main>
+    </div>
   );
 }
